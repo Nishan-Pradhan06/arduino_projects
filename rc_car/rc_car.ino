@@ -1,20 +1,26 @@
 #include <Servo.h>
 #include <SoftwareSerial.h>
 
-// ---------------- Bluetooth ----------------
-SoftwareSerial BT(10, 11);  // RX, TX
+/* =====================================================
+   BLUETOOTH (HC-05 / HC-06)
+   ===================================================== */
+SoftwareSerial BT(10, 11);   // RX, TX
 
-// ---------------- Sensors ----------------
-#define IR_PIN A0
+/* =====================================================
+   ULTRASONIC SENSOR (HC-SR04)
+   ===================================================== */
 #define TRIG_PIN 12
 #define ECHO_PIN 13
 
-// ---------------- Servo ----------------
+/* =====================================================
+   SERVO MOTOR
+   ===================================================== */
 #define SERVO_PIN 8
 Servo myServo;
 
-// ---------------- Motor (L298N) ----------------
-// ⚠️ PINS NOT CHANGED
+/* =====================================================
+   MOTOR DRIVER (L298N)
+   ===================================================== */
 #define ENA 7
 #define IN1 6
 #define IN2 5
@@ -22,32 +28,38 @@ Servo myServo;
 #define IN4 3
 #define ENB 2
 
-// ---------------- Speed ----------------
+/* =====================================================
+   SPEED SETTINGS
+   ===================================================== */
 int FAST_SPEED = 255;
 int SLOW_SPEED = 120;
-int valSpeed = FAST_SPEED;
+int valSpeed   = FAST_SPEED;
 
-// ---------------- Variables ----------------
+/* =====================================================
+   VARIABLES
+   ===================================================== */
 long duration;
 int distance;
-int irValue;
 bool blocked = false;
 
 char currentCmd = 'S';
 
-// Command timeout (hold button logic)
+// Bluetooth button hold logic
 unsigned long lastCmdTime = 0;
 const unsigned long CMD_TIMEOUT = 200;
 
-// Sensor timing
+// Ultrasonic timing
 unsigned long lastSensorTime = 0;
 
-// ---------------- Setup ----------------
+/* =====================================================
+   SETUP
+   ===================================================== */
 void setup() {
   Serial.begin(9600);
   BT.begin(9600);
 
-  pinMode(IR_PIN, INPUT);
+  Serial.println("==== ROBOT INITIALIZING ====");
+
   pinMode(TRIG_PIN, OUTPUT);
   pinMode(ECHO_PIN, INPUT);
 
@@ -62,35 +74,50 @@ void setup() {
   myServo.write(90);
 
   stopMotors();
-  Serial.println("Bluetooth Car Ready");
+
+  Serial.println("Motors OK");
+  Serial.println("Servo OK");
+  Serial.println("Ultrasonic OK");
+
+  startupScan();   // 🔥 Scan surroundings at power ON
+
+  Serial.println("Bluetooth Car Ready (Ultrasonic Only)");
+  Serial.println("=================================");
 }
 
-// ---------------- Loop ----------------
+/* =====================================================
+   LOOP
+   ===================================================== */
 void loop() {
 
-  // ---------- Obstacle check ----------
+  /* -------- Ultrasonic Obstacle Check -------- */
   if (millis() - lastSensorTime > 80) {
     lastSensorTime = millis();
 
-    irValue = digitalRead(IR_PIN);
     distance = getDistance();
+    Serial.print("Distance: ");
+    Serial.print(distance);
+    Serial.println(" cm");
 
-    if (irValue == LOW || distance < 20) {
+    if (distance < 20) {
       blocked = true;
-      scanAndAvoid();   // 🔥 AUTO AVOID
+      Serial.println("⚠ Obstacle Detected!");
+      scanAndAvoid();
     } else {
       blocked = false;
     }
   }
 
-  // ---------- Read Bluetooth ----------
+  /* -------- Read Bluetooth Commands -------- */
   if (BT.available()) {
     currentCmd = BT.read();
     lastCmdTime = millis();
+
+    Serial.print("Bluetooth Command: ");
     Serial.println(currentCmd);
   }
 
-  // ---------- Stop if button released ----------
+  /* -------- Stop if button released -------- */
   if (millis() - lastCmdTime > CMD_TIMEOUT) {
     currentCmd = 'S';
   }
@@ -100,31 +127,54 @@ void loop() {
     return;
   }
 
-  // ---------- Execute command ----------
+  /* -------- Execute Commands -------- */
   switch (currentCmd) {
 
-    case 'F': forward(); break;
-    case 'B': backward(); break;
-    case 'L': left(); break;
-    case 'R': right(); break;
+    case 'F': Serial.println("FORWARD"); forward(); break;
+    case 'B': Serial.println("BACKWARD"); backward(); break;
+    case 'L': Serial.println("LEFT"); left(); break;
+    case 'R': Serial.println("RIGHT"); right(); break;
 
-    case 'G': forwardLeft(); break;
-    case 'H': forwardRight(); break;
-    case 'I': backLeft(); break;
-    case 'J': backRight(); break;
+    case 'G': Serial.println("FORWARD LEFT"); forwardLeft(); break;
+    case 'H': Serial.println("FORWARD RIGHT"); forwardRight(); break;
+    case 'I': Serial.println("BACK LEFT"); backLeft(); break;
+    case 'J': Serial.println("BACK RIGHT"); backRight(); break;
 
-    case 'S': stopMotors(); break;
+    case 'S': Serial.println("STOP"); stopMotors(); break;
 
-    case 'U': myServo.write(180); break;
-    case 'D': myServo.write(0); break;
+    case 'U': Serial.println("SERVO 180"); myServo.write(180); break;
+    case 'D': Serial.println("SERVO 0"); myServo.write(0); break;
 
-    case 'V': valSpeed = FAST_SPEED; break;
-    case 'v': valSpeed = SLOW_SPEED; break;
+    case 'V': valSpeed = FAST_SPEED; Serial.println("FAST SPEED"); break;
+    case 'v': valSpeed = SLOW_SPEED; Serial.println("SLOW SPEED"); break;
   }
 }
 
-// ---------------- AUTO AVOID FUNCTIONS ----------------
+/* =====================================================
+   STARTUP SERVO SCAN
+   ===================================================== */
+void startupScan() {
+  Serial.println("Startup Scan Begin");
 
+  for (int angle = 0; angle <= 180; angle += 15) {
+    myServo.write(angle);
+    delay(80);
+
+    int d = getDistance();
+    Serial.print("Angle ");
+    Serial.print(angle);
+    Serial.print(" -> ");
+    Serial.print(d);
+    Serial.println(" cm");
+  }
+
+  myServo.write(90);
+  Serial.println("Startup Scan Complete");
+}
+
+/* =====================================================
+   AUTO AVOID LOGIC
+   ===================================================== */
 int measureAtAngle(int angle) {
   myServo.write(angle);
   delay(250);
@@ -134,21 +184,30 @@ int measureAtAngle(int angle) {
 void scanAndAvoid() {
   stopMotors();
 
+  Serial.println("Scanning for free path...");
+
   int leftDist   = measureAtAngle(150);
   int centerDist = measureAtAngle(90);
   int rightDist  = measureAtAngle(30);
 
+  Serial.print("Left: "); Serial.print(leftDist);
+  Serial.print("  Center: "); Serial.print(centerDist);
+  Serial.print("  Right: "); Serial.println(rightDist);
+
   myServo.write(90);
 
   if (leftDist > rightDist && leftDist > 30) {
+    Serial.println("Turning LEFT");
     left();
     delay(350);
   }
   else if (rightDist > 30) {
+    Serial.println("Turning RIGHT");
     right();
     delay(350);
   }
   else {
+    Serial.println("Moving BACK");
     backward();
     delay(300);
   }
@@ -156,8 +215,9 @@ void scanAndAvoid() {
   stopMotors();
 }
 
-// ---------------- Core Functions ----------------
-
+/* =====================================================
+   ULTRASONIC DISTANCE FUNCTION
+   ===================================================== */
 int getDistance() {
   digitalWrite(TRIG_PIN, LOW);
   delayMicroseconds(2);
@@ -167,9 +227,13 @@ int getDistance() {
 
   duration = pulseIn(ECHO_PIN, HIGH, 25000);
   if (duration == 0) return 300;
+
   return duration * 0.034 / 2;
 }
 
+/* =====================================================
+   MOTOR CONTROL FUNCTIONS
+   ===================================================== */
 void applySpeed(int leftSpeed, int rightSpeed) {
   analogWrite(ENA, leftSpeed);
   analogWrite(ENB, rightSpeed);

@@ -14,6 +14,9 @@
 int Speed = 160;
 int s1, s2, s3;
 
+// 🔒 Fire lock
+bool fireActive = false;
+
 void setup() {
   Serial.begin(9600);
 
@@ -31,11 +34,7 @@ void setup() {
   pinMode(servo, OUTPUT);
   pinMode(pump, OUTPUT);
 
-  digitalWrite(pump, HIGH); // 🔴 Pump OFF initially (relay OFF)
-
-  for (int angle = 90; angle <= 140; angle += 5) servoPulse(servo, angle);
-  for (int angle = 140; angle >= 40; angle -= 5) servoPulse(servo, angle);
-  for (int angle = 40; angle <= 95; angle += 5) servoPulse(servo, angle);
+  digitalWrite(pump, HIGH); // Pump OFF
 
   analogWrite(enA, Speed);
   analogWrite(enB, Speed);
@@ -44,6 +43,7 @@ void setup() {
 }
 
 void loop() {
+
   s1 = analogRead(ir_R);
   s2 = analogRead(ir_F);
   s3 = analogRead(ir_L);
@@ -51,93 +51,81 @@ void loop() {
   Serial.print(s1); Serial.print("\t");
   Serial.print(s2); Serial.print("\t");
   Serial.println(s3);
+
   delay(50);
 
-  if (s1 < 250) {
+  // 🔥 RIGHT FIRE
+  if (s1 < 300) {
+    fireActive = true;
+    forword();
+    delay(150);
     Stop();
-    digitalWrite(pump, LOW); // ✅ Pump ON
-    for (int angle = 90; angle >= 40; angle -= 3) servoPulse(servo, angle);
-    for (int angle = 40; angle <= 90; angle += 3) servoPulse(servo, angle);
+    digitalWrite(pump, LOW);
+
+    for (int a = 90; a >= 40; a -= 3) servoPulse(servo, a);
+    for (int a = 40; a <= 90; a += 3) servoPulse(servo, a);
   }
 
-  else if (s2 < 350) {
-    Stop();
-    digitalWrite(pump, LOW); // ✅ Pump ON
-    for (int angle = 90; angle <= 140; angle += 3) servoPulse(servo, angle);
-    for (int angle = 140; angle >= 40; angle -= 3) servoPulse(servo, angle);
-    for (int angle = 40; angle <= 90; angle += 3) servoPulse(servo, angle);
-  }
-
-  else if (s3 < 250) {
-    Stop();
-    digitalWrite(pump, LOW); // ✅ Pump ON
-    for (int angle = 90; angle <= 140; angle += 3) servoPulse(servo, angle);
-    for (int angle = 140; angle >= 90; angle -= 3) servoPulse(servo, angle);
-  }
-
-  else if (s1 >= 251 && s1 <= 700) {
-    digitalWrite(pump, HIGH); // ❌ Pump OFF
-    backword();
-    delay(100);
-    turnRight();
+  // 🔥 FRONT FIRE
+  else if (s2 < 400) {
+    fireActive = true;
+    forword();
     delay(200);
+    Stop();
+    digitalWrite(pump, LOW);
+
+    for (int a = 90; a <= 140; a += 3) servoPulse(servo, a);
+    for (int a = 140; a >= 40; a -= 3) servoPulse(servo, a);
+    for (int a = 40; a <= 90; a += 3) servoPulse(servo, a);
   }
 
-  else if (s2 >= 251 && s2 <= 800) {
-    digitalWrite(pump, HIGH); // ❌ Pump OFF
+  // 🔥 LEFT FIRE
+  else if (s3 < 300) {
+    fireActive = true;
+    forword();
+    delay(150);
+    Stop();
+    digitalWrite(pump, LOW);
+
+    for (int a = 90; a <= 140; a += 3) servoPulse(servo, a);
+    for (int a = 140; a >= 90; a -= 3) servoPulse(servo, a);
+  }
+
+  // 🚗 MOVE TOWARD FIRE (NO BACKWARD)
+  else if (!fireActive && (s1 < 700 || s2 < 800 || s3 < 700)) {
+    digitalWrite(pump, HIGH);
     forword();
   }
 
-  else if (s3 >= 251 && s3 <= 700) {
-    digitalWrite(pump, HIGH); // ❌ Pump OFF
-    backword();
-    delay(100);
-    turnLeft();
-    delay(200);
+  // 🛑 STOP
+  else {
+    digitalWrite(pump, HIGH);
+    Stop();
   }
 
-  else {
-    digitalWrite(pump, HIGH); // ❌ Pump OFF
-    Stop();
+  // 🔓 RESET FIRE LOCK
+  if (s1 > 700 && s2 > 800 && s3 > 700) {
+    fireActive = false;
   }
 
   delay(10);
 }
 
+// ---------------- SERVO ----------------
 void servoPulse(int pin, int angle) {
   int pwm = (angle * 11) + 500;
   digitalWrite(pin, HIGH);
   delayMicroseconds(pwm);
   digitalWrite(pin, LOW);
-  delay(50);
+  delay(40);
 }
 
+// ---------------- MOTOR ----------------
 void forword() {
   digitalWrite(in1, HIGH);
   digitalWrite(in2, LOW);
   digitalWrite(in3, LOW);
   digitalWrite(in4, HIGH);
-}
-
-void backword() {
-  digitalWrite(in1, LOW);
-  digitalWrite(in2, HIGH);
-  digitalWrite(in3, HIGH);
-  digitalWrite(in4, LOW);
-}
-
-void turnRight() {
-  digitalWrite(in1, LOW);
-  digitalWrite(in2, HIGH);
-  digitalWrite(in3, LOW);
-  digitalWrite(in4, HIGH);
-}
-
-void turnLeft() {
-  digitalWrite(in1, HIGH);
-  digitalWrite(in2, LOW);
-  digitalWrite(in3, HIGH);
-  digitalWrite(in4, LOW);
 }
 
 void Stop() {
