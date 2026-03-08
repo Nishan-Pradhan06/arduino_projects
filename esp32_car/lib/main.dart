@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'pages/remote_control_nrfs.dart';
+import 'pages/soccer_bot.dart';
 import 'widgets/card_widget.dart';
 
 void main() async {
@@ -65,6 +66,13 @@ class HomeScreen extends StatelessWidget {
                     title: 'Soccer Bot',
                     imageUrl:
                         'https://cdn-icons-png.flaticon.com/512/744/744922.png',
+                        onTap: () {
+                           Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => CarControlScreen(),
+                        ),
+                      );
+                        },
                   ),
                   SizedBox(width: 20),
                   CarCard(

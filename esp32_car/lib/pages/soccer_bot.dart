@@ -1,3 +1,106 @@
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+
+class CarControlScreen extends StatefulWidget {
+  @override
+  _CarControlScreenState createState() => _CarControlScreenState();
+}
+
+class _CarControlScreenState extends State<CarControlScreen> {
+  final String espIP = "192.168.4.1";
+  double speed = 150;
+
+  Future<void> sendCommand(String command) async {
+    try {
+      await http.get(Uri.parse("http://$espIP/$command"));
+    } catch (e) {
+      print("Error sending command");
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.grey[200],
+      appBar: AppBar(title: Text("ESP32 Soccer Car"), centerTitle: true),
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // FORWARD
+          ElevatedButton(
+            onPressed: () => sendCommand("TL"),
+            child: Text("Forward"),
+            style: ElevatedButton.styleFrom(minimumSize: Size(100, 50)),
+          ),
+
+          SizedBox(height: 15),
+
+          // LEFT + STOP + RIGHT
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ElevatedButton(
+                onPressed: () => sendCommand("F"),
+                child: Text("Left"),
+                style: ElevatedButton.styleFrom(minimumSize: Size(150, 50)),
+              ),
+
+              SizedBox(width: 15),
+
+              ElevatedButton(
+                onPressed: () => sendCommand("S"),
+                child: Text("Stop"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  minimumSize: Size(100, 50),
+                ),
+              ),
+
+              SizedBox(width: 15),
+              ElevatedButton(
+                onPressed: () => sendCommand("R"),
+                child: Text("Right"),
+                style: ElevatedButton.styleFrom(minimumSize: Size(150, 50)),
+              ),
+            ],
+          ),
+
+          SizedBox(height: 15),
+
+          // REVERSE
+          ElevatedButton(
+            onPressed: () => sendCommand("TR"),
+            child: Text("Reverse"),
+            style: ElevatedButton.styleFrom(minimumSize: Size(100, 50)),
+          ),
+
+          SizedBox(height: 30),
+
+          // SPEED SLIDER
+          Text(
+            "Speed: ${speed.toInt()}",
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+
+          Slider(
+            value: speed,
+            min: 0,
+            max: 255,
+            divisions: 255,
+            label: speed.toInt().toString(),
+            onChanged: (value) {
+              setState(() {
+                speed = value;
+              });
+              sendCommand(speed.toInt().toString());
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 // import 'dart:convert';
 // import 'dart:developer';
 
