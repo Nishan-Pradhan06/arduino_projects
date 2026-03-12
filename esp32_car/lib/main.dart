@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'pages/mar_rovers.dart';
 import 'pages/remote_control_nrfs.dart';
 import 'pages/soccer_bot.dart';
 import 'widgets/card_widget.dart';
@@ -66,19 +67,24 @@ class HomeScreen extends StatelessWidget {
                     title: 'Soccer Bot',
                     imageUrl:
                         'https://cdn-icons-png.flaticon.com/512/744/744922.png',
-                        onTap: () {
-                           Navigator.of(context).push(
+                    onTap: () {
+                      Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (context) => CarControlScreen(),
                         ),
                       );
-                        },
+                    },
                   ),
                   SizedBox(width: 20),
                   CarCard(
-                    title: 'Settings',
+                    title: 'Mars Rover',
                     imageUrl:
                         'https://cdn-icons-png.flaticon.com/512/745/745922.png',
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (context) => RoverControl()),
+                      );
+                    },
                   ),
                 ],
               ),
