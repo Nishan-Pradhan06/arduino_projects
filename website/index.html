@@ -1,0 +1,2287 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DevForge — Arduino & Flutter Project Hub</title>
+<meta name="description" content="Explore Arduino projects, Flutter apps, circuit designs, APK downloads, and detailed tutorials for makers and developers.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;600;700;800&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<style>
+/* ============================================================
+   DESIGN TOKENS & CSS VARIABLES
+============================================================ */
+:root {
+  --font-display: 'Syne', sans-serif;
+  --font-body: 'Outfit', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Dark theme */
+  --bg-primary: #0a0c10;
+  --bg-secondary: #0f1217;
+  --bg-card: #13171f;
+  --bg-card-hover: #181d27;
+  --bg-input: #1a1f2a;
+  --border: #1e2533;
+  --border-bright: #2a3347;
+  --text-primary: #e8ecf4;
+  --text-secondary: #8892a4;
+  --text-muted: #505b6e;
+  --accent: #00d4aa;
+  --accent-dim: rgba(0,212,170,0.12);
+  --accent-glow: rgba(0,212,170,0.25);
+  --accent2: #3b82f6;
+  --accent2-dim: rgba(59,130,246,0.12);
+  --orange: #f97316;
+  --orange-dim: rgba(249,115,22,0.12);
+  --purple: #a855f7;
+  --purple-dim: rgba(168,85,247,0.12);
+  --red: #ef4444;
+  --green: #22c55e;
+  --shadow: 0 4px 24px rgba(0,0,0,0.4);
+  --shadow-lg: 0 8px 48px rgba(0,0,0,0.6);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-lg: 20px;
+  --nav-h: 68px;
+  --transition: 0.2s cubic-bezier(0.4,0,0.2,1);
+}
+[data-theme="light"] {
+  --bg-primary: #f5f7fa;
+  --bg-secondary: #ffffff;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f0f4ff;
+  --bg-input: #f0f2f5;
+  --border: #e2e8f0;
+  --border-bright: #c7d2e0;
+  --text-primary: #0f172a;
+  --text-secondary: #4b5563;
+  --text-muted: #9ca3af;
+  --accent: #00a882;
+  --accent-dim: rgba(0,168,130,0.1);
+  --accent-glow: rgba(0,168,130,0.2);
+  --accent2: #2563eb;
+  --accent2-dim: rgba(37,99,235,0.1);
+  --orange: #ea6c00;
+  --orange-dim: rgba(234,108,0,0.1);
+  --purple: #9333ea;
+  --purple-dim: rgba(147,51,234,0.1);
+  --shadow: 0 2px 16px rgba(0,0,0,0.08);
+  --shadow-lg: 0 8px 40px rgba(0,0,0,0.12);
+}
+
+/* ============================================================
+   RESET & BASE
+============================================================ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;font-size:16px}
+body{font-family:var(--font-body);background:var(--bg-primary);color:var(--text-primary);line-height:1.6;min-height:100vh;overflow-x:hidden;transition:background var(--transition),color var(--transition)}
+a{color:inherit;text-decoration:none}
+img{max-width:100%;height:auto;display:block}
+button{cursor:pointer;border:none;background:none;font-family:inherit}
+input,textarea,select{font-family:inherit}
+ul{list-style:none}
+::selection{background:var(--accent);color:#000}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:var(--bg-secondary)}
+::-webkit-scrollbar-thumb{background:var(--border-bright);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--accent)}
+
+/* ============================================================
+   PAGES — only active page visible
+============================================================ */
+.page{display:none;animation:pageIn 0.35s ease forwards}
+.page.active{display:block}
+@keyframes pageIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* ============================================================
+   LAYOUT UTILITIES
+============================================================ */
+.container{max-width:1280px;margin:0 auto;padding:0 24px}
+.container--narrow{max-width:900px}
+.grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:24px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+.flex{display:flex}
+.flex-center{display:flex;align-items:center;justify-content:center}
+.flex-between{display:flex;align-items:center;justify-content:space-between}
+.flex-col{display:flex;flex-direction:column}
+.gap-2{gap:8px}
+.gap-3{gap:12px}
+.gap-4{gap:16px}
+.gap-6{gap:24px}
+.mt-2{margin-top:8px}
+.mt-3{margin-top:12px}
+.mt-4{margin-top:16px}
+.mt-6{margin-top:24px}
+.mt-8{margin-top:32px}
+.mt-12{margin-top:48px}
+.mb-2{margin-bottom:8px}
+.mb-4{margin-bottom:16px}
+.mb-6{margin-bottom:24px}
+
+/* ============================================================
+   TYPOGRAPHY
+============================================================ */
+h1,h2,h3,h4,h5{font-family:var(--font-display);font-weight:700;line-height:1.2}
+h1{font-size:clamp(2.2rem,5vw,4rem)}
+h2{font-size:clamp(1.6rem,3vw,2.4rem)}
+h3{font-size:clamp(1.1rem,2vw,1.5rem)}
+h4{font-size:1.1rem}
+p{color:var(--text-secondary);line-height:1.75}
+.mono{font-family:var(--font-mono)}
+.text-accent{color:var(--accent)}
+.text-muted{color:var(--text-muted)}
+.text-sm{font-size:0.85rem}
+.text-xs{font-size:0.75rem}
+.fw-600{font-weight:600}
+.section-label{font-family:var(--font-mono);font-size:0.75rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--accent);margin-bottom:12px}
+.section-title{font-family:var(--font-display);font-size:clamp(1.5rem,2.5vw,2.2rem);font-weight:800;color:var(--text-primary);margin-bottom:8px}
+.section-sub{color:var(--text-secondary);font-size:1rem;max-width:560px}
+.section-head{margin-bottom:40px}
+
+/* ============================================================
+   BUTTONS
+============================================================ */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 22px;border-radius:var(--radius-sm);font-weight:600;font-size:0.9rem;transition:all var(--transition);white-space:nowrap}
+.btn-primary{background:var(--accent);color:#000;box-shadow:0 0 20px var(--accent-glow)}
+.btn-primary:hover{background:#00f5c4;transform:translateY(-1px);box-shadow:0 0 32px var(--accent-glow)}
+.btn-secondary{background:var(--bg-card);border:1px solid var(--border-bright);color:var(--text-primary)}
+.btn-secondary:hover{background:var(--bg-card-hover);border-color:var(--accent);color:var(--accent)}
+.btn-outline{border:1px solid var(--accent);color:var(--accent)}
+.btn-outline:hover{background:var(--accent-dim)}
+.btn-ghost{color:var(--text-secondary);padding:8px 12px}
+.btn-ghost:hover{color:var(--text-primary);background:var(--bg-card)}
+.btn-sm{padding:7px 16px;font-size:0.82rem}
+.btn-lg{padding:14px 32px;font-size:1rem}
+.btn-icon{width:38px;height:38px;padding:0;border-radius:var(--radius-sm);flex-shrink:0}
+.btn-danger{background:rgba(239,68,68,0.15);color:var(--red);border:1px solid rgba(239,68,68,0.3)}
+.btn-danger:hover{background:rgba(239,68,68,0.25)}
+.btn-success{background:rgba(34,197,94,0.15);color:var(--green);border:1px solid rgba(34,197,94,0.3)}
+.btn-success:hover{background:rgba(34,197,94,0.25)}
+
+/* ============================================================
+   BADGES / TAGS
+============================================================ */
+.badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em}
+.badge-arduino{background:var(--accent-dim);color:var(--accent);border:1px solid rgba(0,212,170,0.25)}
+.badge-flutter{background:var(--accent2-dim);color:var(--accent2);border:1px solid rgba(59,130,246,0.25)}
+.badge-apk{background:var(--orange-dim);color:var(--orange);border:1px solid rgba(249,115,22,0.25)}
+.badge-circuit{background:var(--purple-dim);color:var(--purple);border:1px solid rgba(168,85,247,0.25)}
+.badge-tutorial{background:rgba(34,197,94,0.12);color:var(--green);border:1px solid rgba(34,197,94,0.25)}
+.badge-beginner{background:rgba(34,197,94,0.12);color:var(--green)}
+.badge-intermediate{background:var(--orange-dim);color:var(--orange)}
+.badge-advanced{background:rgba(239,68,68,0.12);color:var(--red)}
+
+/* ============================================================
+   CARDS
+============================================================ */
+.card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:all var(--transition)}
+.card:hover{border-color:var(--border-bright);transform:translateY(-3px);box-shadow:var(--shadow)}
+.card-img{width:100%;height:180px;object-fit:cover;background:linear-gradient(135deg,var(--bg-secondary),var(--border))}
+.card-img-placeholder{width:100%;height:180px;background:linear-gradient(135deg,var(--bg-secondary) 0%,var(--border) 100%);display:flex;align-items:center;justify-content:center;font-size:2.5rem}
+.card-body{padding:20px}
+.card-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.card-title{font-family:var(--font-display);font-size:1.05rem;font-weight:700;color:var(--text-primary);margin-bottom:8px;line-height:1.3}
+.card-desc{font-size:0.875rem;color:var(--text-secondary);line-height:1.6;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card-footer{padding:12px 20px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.card-stats{display:flex;gap:16px}
+.card-stat{display:flex;align-items:center;gap:5px;font-size:0.78rem;color:var(--text-muted)}
+
+/* ============================================================
+   NAVIGATION
+============================================================ */
+#nav{position:fixed;top:0;left:0;right:0;z-index:1000;height:var(--nav-h);background:rgba(10,12,16,0.85);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);transition:all var(--transition)}
+[data-theme="light"] #nav{background:rgba(245,247,250,0.9)}
+.nav-inner{display:flex;align-items:center;gap:20px;height:100%;max-width:1280px;margin:0 auto;padding:0 24px}
+.nav-logo{font-family:var(--font-display);font-size:1.3rem;font-weight:800;color:var(--text-primary);white-space:nowrap;cursor:pointer}
+.nav-logo span{color:var(--accent)}
+.nav-links{display:flex;align-items:center;gap:4px;flex:1;justify-content:center}
+.nav-link{font-size:0.875rem;font-weight:500;color:var(--text-secondary);padding:7px 12px;border-radius:var(--radius-sm);transition:all var(--transition);white-space:nowrap;cursor:pointer}
+.nav-link:hover,.nav-link.active{color:var(--text-primary);background:var(--bg-card)}
+.nav-link.active{color:var(--accent)}
+.nav-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.search-bar{display:flex;align-items:center;gap:8px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:7px 14px;width:220px;transition:all var(--transition)}
+.search-bar:focus-within{border-color:var(--accent);width:260px}
+.search-bar input{background:none;border:none;outline:none;color:var(--text-primary);font-size:0.85rem;width:100%}
+.search-bar input::placeholder{color:var(--text-muted)}
+.theme-toggle{width:38px;height:38px;border-radius:var(--radius-sm);background:var(--bg-card);border:1px solid var(--border);color:var(--text-secondary);display:flex;align-items:center;justify-content:center;transition:all var(--transition);cursor:pointer;font-size:1rem}
+.theme-toggle:hover{color:var(--accent);border-color:var(--accent)}
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:6px}
+.hamburger span{display:block;width:22px;height:2px;background:var(--text-secondary);border-radius:2px;transition:all var(--transition)}
+.mobile-menu{display:none;position:fixed;top:var(--nav-h);left:0;right:0;background:var(--bg-secondary);border-bottom:1px solid var(--border);padding:16px 24px;z-index:999;flex-direction:column;gap:4px}
+.mobile-menu.open{display:flex}
+
+/* ============================================================
+   HERO SECTION
+============================================================ */
+.hero{min-height:100vh;display:flex;align-items:center;padding:calc(var(--nav-h) + 40px) 0 80px;position:relative;overflow:hidden}
+.hero-bg{position:absolute;inset:0;z-index:0}
+.hero-grid{position:absolute;inset:0;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:60px 60px;opacity:0.4}
+.hero-glow{position:absolute;top:20%;left:50%;transform:translateX(-50%);width:600px;height:600px;background:radial-gradient(circle,var(--accent-glow) 0%,transparent 70%);filter:blur(60px);pointer-events:none}
+.hero-glow2{position:absolute;bottom:10%;right:10%;width:400px;height:400px;background:radial-gradient(circle,var(--accent2-dim) 0%,transparent 70%);filter:blur(60px)}
+.hero-content{position:relative;z-index:1;max-width:800px}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:var(--accent-dim);border:1px solid rgba(0,212,170,0.3);border-radius:20px;padding:6px 16px;font-family:var(--font-mono);font-size:0.78rem;color:var(--accent);margin-bottom:24px}
+.hero-badge-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(1.3)}}
+.hero h1{color:var(--text-primary);margin-bottom:20px;letter-spacing:-0.02em}
+.hero h1 em{font-style:normal;color:var(--accent)}
+.hero-sub{font-size:1.1rem;color:var(--text-secondary);max-width:580px;margin-bottom:36px;line-height:1.8}
+.hero-actions{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:60px}
+.hero-stats{display:flex;gap:40px;flex-wrap:wrap}
+.hero-stat-val{font-family:var(--font-display);font-size:1.8rem;font-weight:800;color:var(--text-primary)}
+.hero-stat-val span{color:var(--accent)}
+.hero-stat-label{font-size:0.82rem;color:var(--text-muted);font-family:var(--font-mono)}
+.hero-terminal{position:absolute;right:0;top:50%;transform:translateY(-50%);width:420px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-lg)}
+.terminal-bar{display:flex;align-items:center;gap:8px;padding:12px 16px;background:var(--bg-secondary);border-bottom:1px solid var(--border)}
+.terminal-dot{width:12px;height:12px;border-radius:50%}
+.terminal-title{font-family:var(--font-mono);font-size:0.75rem;color:var(--text-muted);margin-left:auto;margin-right:auto}
+.terminal-body{padding:20px;font-family:var(--font-mono);font-size:0.8rem;line-height:1.8;min-height:220px}
+.t-comment{color:#5c6882}
+.t-keyword{color:#c792ea}
+.t-func{color:#82aaff}
+.t-string{color:var(--accent)}
+.t-var{color:#f78c6c}
+.t-cursor{display:inline-block;width:8px;height:15px;background:var(--accent);animation:blink 1s infinite;vertical-align:middle}
+@keyframes blink{0%,49%{opacity:1}50%,100%{opacity:0}}
+
+/* ============================================================
+   SECTION STYLES
+============================================================ */
+.section{padding:80px 0}
+.section-alt{background:var(--bg-secondary)}
+
+/* ============================================================
+   PROJECT CARDS GRID
+============================================================ */
+.projects-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:24px}
+
+/* ============================================================
+   FILTER / SORT BAR
+============================================================ */
+.filter-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:32px;padding:16px 20px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius)}
+.filter-group{display:flex;gap:8px;flex-wrap:wrap}
+.filter-btn{padding:6px 14px;border-radius:20px;font-size:0.82rem;font-weight:500;border:1px solid var(--border);color:var(--text-secondary);background:none;cursor:pointer;transition:all var(--transition)}
+.filter-btn:hover,.filter-btn.active{background:var(--accent-dim);border-color:var(--accent);color:var(--accent)}
+.filter-sep{width:1px;height:24px;background:var(--border);flex-shrink:0}
+.sort-select{background:var(--bg-input);border:1px solid var(--border);color:var(--text-primary);padding:6px 12px;border-radius:var(--radius-sm);font-size:0.85rem;cursor:pointer;outline:none}
+.filter-label{font-size:0.8rem;color:var(--text-muted);font-family:var(--font-mono);white-space:nowrap}
+
+/* ============================================================
+   SINGLE PROJECT PAGE
+============================================================ */
+.project-hero{padding:calc(var(--nav-h) + 40px) 0 60px;background:var(--bg-secondary);border-bottom:1px solid var(--border)}
+.project-meta-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+.project-title-h{font-size:clamp(1.8rem,4vw,3rem);color:var(--text-primary);margin-bottom:16px}
+.project-featured-img{width:100%;max-height:500px;object-fit:cover;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg-card)}
+.project-featured-placeholder{width:100%;height:400px;border-radius:var(--radius);border:1px solid var(--border);background:linear-gradient(135deg,var(--bg-card),var(--border));display:flex;align-items:center;justify-content:center;font-size:4rem}
+.project-layout{display:grid;grid-template-columns:1fr 300px;gap:40px;padding:60px 0}
+.project-main{}
+.project-sidebar{display:flex;flex-direction:column;gap:20px}
+.sidebar-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
+.sidebar-card h4{font-family:var(--font-display);font-weight:700;margin-bottom:16px;color:var(--text-primary)}
+.sidebar-download-btn{width:100%;padding:12px;border-radius:var(--radius-sm);background:var(--accent);color:#000;font-weight:700;font-size:0.9rem;cursor:pointer;border:none;transition:all var(--transition);display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px}
+.sidebar-download-btn:hover{background:#00f5c4;transform:translateY(-1px)}
+.sidebar-download-btn.secondary{background:var(--bg-input);color:var(--text-primary);border:1px solid var(--border)}
+.sidebar-download-btn.secondary:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
+.info-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:0.85rem}
+.info-row:last-child{border-bottom:none}
+.info-row-label{color:var(--text-muted)}
+.info-row-val{color:var(--text-primary);font-weight:600}
+.components-list{display:flex;flex-direction:column;gap:8px}
+.component-item{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--bg-input);border-radius:var(--radius-sm);font-size:0.875rem}
+.component-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0}
+.feature-list{display:flex;flex-direction:column;gap:10px}
+.feature-item{display:flex;align-items:flex-start;gap:12px;font-size:0.9rem}
+.feature-check{color:var(--accent);font-size:1.1rem;margin-top:1px;flex-shrink:0}
+.code-block{background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin:24px 0}
+.code-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);background:var(--bg-card)}
+.code-lang{font-family:var(--font-mono);font-size:0.78rem;color:var(--accent)}
+.copy-btn{font-size:0.78rem;color:var(--text-muted);padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:none;cursor:pointer;transition:all var(--transition)}
+.copy-btn:hover{color:var(--accent);border-color:var(--accent)}
+.code-block pre{margin:0!important;border-radius:0!important;max-height:420px}
+.gallery-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0}
+.gallery-img{aspect-ratio:4/3;background:linear-gradient(135deg,var(--bg-card),var(--border));border-radius:var(--radius-sm);overflow:hidden;cursor:pointer;transition:all var(--transition);display:flex;align-items:center;justify-content:center;font-size:2rem;border:1px solid var(--border)}
+.gallery-img:hover{transform:scale(1.03);box-shadow:var(--shadow)}
+.video-embed{width:100%;aspect-ratio:16/9;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg-card);display:flex;align-items:center;justify-content:center;margin:20px 0;overflow:hidden}
+.video-placeholder{display:flex;flex-direction:column;align-items:center;gap:12px;color:var(--text-muted)}
+.play-btn{width:64px;height:64px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:1.5rem;color:#000;cursor:pointer;transition:all var(--transition)}
+.play-btn:hover{transform:scale(1.1);box-shadow:0 0 24px var(--accent-glow)}
+
+/* ============================================================
+   COMMENTS
+============================================================ */
+.comment{display:flex;gap:14px;padding:20px 0;border-bottom:1px solid var(--border)}
+.comment:last-child{border-bottom:none}
+.comment-avatar{width:42px;height:42px;border-radius:50%;background:var(--accent-dim);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--accent);font-size:0.9rem;flex-shrink:0}
+.comment-author{font-weight:600;font-size:0.9rem;color:var(--text-primary)}
+.comment-date{font-size:0.78rem;color:var(--text-muted);margin-left:10px}
+.comment-text{font-size:0.875rem;color:var(--text-secondary);margin-top:6px;line-height:1.7}
+.comment-form{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-top:24px}
+.form-group{margin-bottom:16px}
+.form-label{display:block;font-size:0.85rem;font-weight:600;color:var(--text-secondary);margin-bottom:8px}
+.form-input{width:100%;background:var(--bg-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;color:var(--text-primary);font-size:0.9rem;outline:none;transition:all var(--transition)}
+.form-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+.form-textarea{resize:vertical;min-height:120px;font-family:var(--font-body)}
+
+/* ============================================================
+   APK DOWNLOADS PAGE
+============================================================ */
+.apk-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;display:flex;gap:16px;align-items:center;transition:all var(--transition)}
+.apk-card:hover{border-color:var(--border-bright);box-shadow:var(--shadow)}
+.apk-icon{width:64px;height:64px;border-radius:16px;background:var(--orange-dim);border:1px solid rgba(249,115,22,0.3);display:flex;align-items:center;justify-content:center;font-size:1.8rem;flex-shrink:0}
+.apk-info{flex:1}
+.apk-name{font-family:var(--font-display);font-size:1rem;font-weight:700;color:var(--text-primary);margin-bottom:4px}
+.apk-meta{display:flex;gap:16px;font-size:0.78rem;color:var(--text-muted);margin-bottom:8px}
+.apk-meta span{display:flex;align-items:center;gap:4px}
+.dl-count{font-family:var(--font-mono);font-size:0.78rem;color:var(--accent)}
+
+/* ============================================================
+   TUTORIAL CARDS
+============================================================ */
+.tutorial-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:all var(--transition)}
+.tutorial-card:hover{border-color:var(--border-bright);transform:translateY(-3px);box-shadow:var(--shadow)}
+.tutorial-header{padding:20px;background:linear-gradient(135deg,var(--bg-secondary),var(--bg-card))}
+.tutorial-num{font-family:var(--font-mono);font-size:0.75rem;color:var(--text-muted);margin-bottom:8px}
+.tutorial-title{font-family:var(--font-display);font-size:1rem;font-weight:700;color:var(--text-primary);line-height:1.3}
+.tutorial-body{padding:20px;border-top:1px solid var(--border)}
+.tutorial-desc{font-size:0.875rem;color:var(--text-secondary);line-height:1.65;margin-bottom:16px}
+.tutorial-tags{display:flex;gap:8px;flex-wrap:wrap}
+.tutorial-footer{padding:12px 20px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;font-size:0.8rem;color:var(--text-muted)}
+
+/* ============================================================
+   ABOUT PAGE
+============================================================ */
+.about-hero{padding:calc(var(--nav-h)+60px) 0 80px;text-align:center}
+.about-avatar{width:120px;height:120px;border-radius:50%;background:var(--accent-dim);border:3px solid var(--accent);margin:0 auto 24px;display:flex;align-items:center;justify-content:center;font-size:3rem;box-shadow:0 0 40px var(--accent-glow)}
+.skills-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin-top:32px}
+.skill-item{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px}
+.skill-bar{height:4px;background:var(--border);border-radius:2px;margin-top:10px;overflow:hidden}
+.skill-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+.social-links{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:24px}
+.social-link{width:48px;height:48px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-card);display:flex;align-items:center;justify-content:center;font-size:1.2rem;transition:all var(--transition);cursor:pointer}
+.social-link:hover{border-color:var(--accent);background:var(--accent-dim);color:var(--accent);transform:translateY(-2px)}
+
+/* ============================================================
+   CONTACT PAGE
+============================================================ */
+.contact-layout{display:grid;grid-template-columns:1fr 1fr;gap:60px;padding:calc(var(--nav-h)+40px) 0 80px}
+.contact-info h2{margin-bottom:16px}
+.contact-info p{margin-bottom:32px}
+.contact-method{display:flex;align-items:center;gap:14px;padding:16px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;transition:all var(--transition)}
+.contact-method:hover{border-color:var(--accent)}
+.contact-method-icon{width:42px;height:42px;border-radius:var(--radius-sm);background:var(--accent-dim);display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:var(--accent);flex-shrink:0}
+.contact-form-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:36px}
+
+/* ============================================================
+   ADMIN DASHBOARD
+============================================================ */
+.admin-layout{display:grid;grid-template-columns:240px 1fr;min-height:100vh;padding-top:var(--nav-h)}
+.admin-sidebar{background:var(--bg-secondary);border-right:1px solid var(--border);padding:24px 0;position:sticky;top:var(--nav-h);height:calc(100vh - var(--nav-h));overflow-y:auto}
+.admin-sidebar-title{font-family:var(--font-mono);font-size:0.7rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);padding:0 20px;margin-bottom:8px;margin-top:24px}
+.admin-sidebar-title:first-child{margin-top:0}
+.admin-nav-item{display:flex;align-items:center;gap:10px;padding:10px 20px;font-size:0.875rem;color:var(--text-secondary);cursor:pointer;transition:all var(--transition);border-left:3px solid transparent}
+.admin-nav-item:hover{color:var(--text-primary);background:var(--bg-card)}
+.admin-nav-item.active{color:var(--accent);background:var(--accent-dim);border-left-color:var(--accent)}
+.admin-nav-item .nav-icon{font-size:1rem;width:20px;text-align:center}
+.admin-main{padding:32px;overflow:auto}
+.admin-header{margin-bottom:32px}
+.admin-header h2{color:var(--text-primary);margin-bottom:4px}
+.admin-header p{color:var(--text-muted);font-size:0.875rem}
+.stat-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:32px}
+.stat-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
+.stat-card-val{font-family:var(--font-display);font-size:2rem;font-weight:800;color:var(--text-primary)}
+.stat-card-label{font-size:0.8rem;color:var(--text-muted);font-family:var(--font-mono);margin-top:4px}
+.stat-card-change{font-size:0.78rem;color:var(--green);margin-top:8px}
+.admin-table{width:100%;border-collapse:collapse;background:var(--bg-card);border-radius:var(--radius);overflow:hidden;border:1px solid var(--border)}
+.admin-table th{text-align:left;padding:12px 16px;font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted);background:var(--bg-secondary);border-bottom:1px solid var(--border)}
+.admin-table td{padding:12px 16px;font-size:0.875rem;border-bottom:1px solid var(--border);color:var(--text-secondary)}
+.admin-table tr:last-child td{border-bottom:none}
+.admin-table tr:hover td{background:var(--bg-card-hover)}
+.admin-panel{display:none}
+.admin-panel.active{display:block}
+.admin-form{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:28px;max-width:760px}
+.admin-form h3{margin-bottom:24px;color:var(--text-primary)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.upload-zone{border:2px dashed var(--border);border-radius:var(--radius);padding:40px;text-align:center;cursor:pointer;transition:all var(--transition)}
+.upload-zone:hover{border-color:var(--accent);background:var(--accent-dim)}
+.upload-icon{font-size:2.5rem;margin-bottom:12px}
+.upload-text{color:var(--text-secondary);font-size:0.875rem}
+.upload-text strong{color:var(--accent)}
+
+/* ============================================================
+   CATEGORIES SECTION
+============================================================ */
+.cat-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:28px;text-align:center;transition:all var(--transition);cursor:pointer}
+.cat-card:hover{border-color:var(--accent);transform:translateY(-4px);box-shadow:var(--shadow)}
+.cat-icon{width:64px;height:64px;border-radius:16px;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-size:1.8rem}
+.cat-icon.arduino{background:var(--accent-dim)}
+.cat-icon.flutter{background:var(--accent2-dim)}
+.cat-icon.apk{background:var(--orange-dim)}
+.cat-icon.circuit{background:var(--purple-dim)}
+.cat-title{font-family:var(--font-display);font-weight:700;font-size:1rem;color:var(--text-primary);margin-bottom:6px}
+.cat-count{font-family:var(--font-mono);font-size:0.78rem;color:var(--text-muted)}
+
+/* ============================================================
+   NEWSLETTER
+============================================================ */
+.newsletter{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:48px;text-align:center}
+.newsletter h2{margin-bottom:12px}
+.newsletter p{max-width:480px;margin:0 auto 28px}
+.newsletter-form{display:flex;gap:12px;max-width:440px;margin:0 auto;flex-wrap:wrap}
+.newsletter-form input{flex:1;min-width:200px}
+
+/* ============================================================
+   FOOTER
+============================================================ */
+footer{background:var(--bg-secondary);border-top:1px solid var(--border);padding:60px 0 32px}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:48px;margin-bottom:48px}
+.footer-brand{font-family:var(--font-display);font-size:1.2rem;font-weight:800;margin-bottom:12px}
+.footer-brand span{color:var(--accent)}
+.footer-desc{font-size:0.875rem;color:var(--text-muted);line-height:1.7;max-width:280px}
+.footer-col h5{font-family:var(--font-display);font-weight:700;font-size:0.9rem;color:var(--text-primary);margin-bottom:16px}
+.footer-link{display:block;font-size:0.875rem;color:var(--text-muted);padding:4px 0;cursor:pointer;transition:color var(--transition)}
+.footer-link:hover{color:var(--accent)}
+.footer-bottom{border-top:1px solid var(--border);padding-top:24px;display:flex;align-items:center;justify-content:space-between;font-size:0.825rem;color:var(--text-muted)}
+.footer-social{display:flex;gap:10px}
+.footer-social-link{width:36px;height:36px;border-radius:var(--radius-sm);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--transition)}
+.footer-social-link:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ============================================================
+   CIRCUIT PAGE
+============================================================ */
+.circuit-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:all var(--transition)}
+.circuit-card:hover{border-color:var(--purple);transform:translateY(-3px);box-shadow:0 8px 32px rgba(168,85,247,0.12)}
+.circuit-img{width:100%;height:200px;background:linear-gradient(135deg,#1a0a2e,#2d1b69);display:flex;align-items:center;justify-content:center;font-size:3rem;position:relative;overflow:hidden}
+.circuit-lines{position:absolute;inset:0;background-image:linear-gradient(rgba(168,85,247,0.15) 1px,transparent 1px),linear-gradient(90deg,rgba(168,85,247,0.15) 1px,transparent 1px);background-size:20px 20px}
+
+/* ============================================================
+   POPULAR DOWNLOADS SECTION
+============================================================ */
+.dl-item{display:flex;align-items:center;gap:14px;padding:14px 16px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);transition:all var(--transition)}
+.dl-item:hover{border-color:var(--orange);background:var(--orange-dim)}
+.dl-rank{font-family:var(--font-mono);font-size:1.2rem;font-weight:700;color:var(--text-muted);width:30px;text-align:center;flex-shrink:0}
+.dl-rank.top{color:var(--orange)}
+.dl-icon{width:44px;height:44px;border-radius:12px;background:var(--orange-dim);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0}
+.dl-name{font-weight:600;font-size:0.9rem;color:var(--text-primary)}
+.dl-count{font-family:var(--font-mono);font-size:0.75rem;color:var(--text-muted)}
+
+/* ============================================================
+   TOAST NOTIFICATIONS
+============================================================ */
+#toast-container{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:10px}
+.toast{padding:12px 20px;border-radius:var(--radius-sm);background:var(--bg-card);border:1px solid var(--border);color:var(--text-primary);font-size:0.875rem;box-shadow:var(--shadow);display:flex;align-items:center;gap:10px;animation:toastIn 0.3s ease}
+.toast.success{border-color:var(--green);background:rgba(34,197,94,0.1)}
+.toast.error{border-color:var(--red);background:rgba(239,68,68,0.1)}
+@keyframes toastIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+
+/* ============================================================
+   MISC
+============================================================ */
+.divider{height:1px;background:var(--border);margin:32px 0}
+.back-btn{display:inline-flex;align-items:center;gap:8px;color:var(--text-muted);font-size:0.875rem;cursor:pointer;padding:8px 0;margin-bottom:24px;transition:color var(--transition)}
+.back-btn:hover{color:var(--accent)}
+.empty-state{text-align:center;padding:60px 20px;color:var(--text-muted)}
+.empty-state-icon{font-size:3rem;margin-bottom:16px}
+.page-header{padding:calc(var(--nav-h)+40px) 0 48px;border-bottom:1px solid var(--border);background:var(--bg-secondary);margin-bottom:0}
+.page-title{font-size:clamp(1.8rem,3vw,2.8rem);color:var(--text-primary);margin-bottom:8px}
+.page-desc{color:var(--text-secondary);max-width:560px}
+.breadcrumb{display:flex;align-items:center;gap:8px;font-size:0.82rem;color:var(--text-muted);margin-bottom:16px}
+.breadcrumb-sep{color:var(--border-bright)}
+
+/* ============================================================
+   RESPONSIVE
+============================================================ */
+@media(max-width:1100px){
+  .hero-terminal{display:none}
+  .project-layout{grid-template-columns:1fr}
+  .project-sidebar{display:grid;grid-template-columns:repeat(2,1fr)}
+  .footer-grid{grid-template-columns:1fr 1fr}
+  .stat-cards{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:768px){
+  .nav-links{display:none}
+  .search-bar{display:none}
+  .hamburger{display:flex}
+  .hero{padding:calc(var(--nav-h)+20px) 0 60px}
+  .hero-stats{gap:24px}
+  .grid-2,.grid-3,.grid-4,.form-row{grid-template-columns:1fr}
+  .gallery-grid{grid-template-columns:repeat(2,1fr)}
+  .footer-grid{grid-template-columns:1fr}
+  .contact-layout{grid-template-columns:1fr;padding-top:calc(var(--nav-h)+20px)}
+  .admin-layout{grid-template-columns:1fr}
+  .admin-sidebar{display:none}
+  .project-sidebar{grid-template-columns:1fr}
+  .stat-cards{grid-template-columns:1fr 1fr}
+  .newsletter-form{flex-direction:column}
+  .footer-bottom{flex-direction:column;gap:16px;text-align:center}
+}
+@media(max-width:480px){
+  .container{padding:0 16px}
+  .stat-cards{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     NAVIGATION
+============================================================ -->
+<nav id="nav">
+  <div class="nav-inner">
+    <div class="nav-logo" onclick="showPage('home')">Dev<span>Forge</span></div>
+    <div class="nav-links">
+      <a class="nav-link active" onclick="showPage('home')">Home</a>
+      <a class="nav-link" onclick="showPage('arduino')">Arduino</a>
+      <a class="nav-link" onclick="showPage('flutter')">Flutter Apps</a>
+      <a class="nav-link" onclick="showPage('apk')">APK Downloads</a>
+      <a class="nav-link" onclick="showPage('tutorials')">Tutorials</a>
+      <a class="nav-link" onclick="showPage('circuits')">Circuits</a>
+      <a class="nav-link" onclick="showPage('about')">About</a>
+      <a class="nav-link" onclick="showPage('contact')">Contact</a>
+    </div>
+    <div class="nav-actions">
+      <div class="search-bar">
+        <span>🔍</span>
+        <input type="text" placeholder="Search projects...">
+      </div>
+      <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">🌙</button>
+      <button class="btn btn-primary btn-sm" onclick="showPage('admin')">⚡ Admin</button>
+      <div class="hamburger" onclick="toggleMobileMenu()">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile Menu -->
+<div class="mobile-menu" id="mobileMenu">
+  <a class="nav-link" onclick="showPage('home');toggleMobileMenu()">🏠 Home</a>
+  <a class="nav-link" onclick="showPage('arduino');toggleMobileMenu()">🤖 Arduino</a>
+  <a class="nav-link" onclick="showPage('flutter');toggleMobileMenu()">📱 Flutter Apps</a>
+  <a class="nav-link" onclick="showPage('apk');toggleMobileMenu()">📦 APK Downloads</a>
+  <a class="nav-link" onclick="showPage('tutorials');toggleMobileMenu()">📚 Tutorials</a>
+  <a class="nav-link" onclick="showPage('circuits');toggleMobileMenu()">⚡ Circuits</a>
+  <a class="nav-link" onclick="showPage('about');toggleMobileMenu()">👤 About</a>
+  <a class="nav-link" onclick="showPage('contact');toggleMobileMenu()">✉️ Contact</a>
+</div>
+
+<!-- ============================================================
+     TOAST
+============================================================ -->
+<div id="toast-container"></div>
+
+<!-- ============================================================
+     PAGE: HOME
+============================================================ -->
+<div class="page active" id="page-home">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-bg">
+      <div class="hero-grid"></div>
+      <div class="hero-glow"></div>
+      <div class="hero-glow2"></div>
+    </div>
+    <div class="container" style="position:relative;z-index:1;width:100%">
+      <div class="hero-content">
+        <div class="hero-badge">
+          <div class="hero-badge-dot"></div>
+          Open Source & Free to Build
+        </div>
+        <h1>Build Amazing Projects<br>with <em>Arduino</em> & Flutter</h1>
+        <p class="hero-sub">Explore hardware projects, Flutter apps, circuit designs, and downloadable APKs — all with step-by-step guides for makers at every level.</p>
+        <div class="hero-actions">
+          <button class="btn btn-primary btn-lg" onclick="showPage('projects')">🚀 Explore Projects</button>
+          <button class="btn btn-secondary btn-lg" onclick="showPage('tutorials')">📖 Read Tutorials</button>
+        </div>
+        <div class="hero-stats">
+          <div>
+            <div class="hero-stat-val">48<span>+</span></div>
+            <div class="hero-stat-label">// projects</div>
+          </div>
+          <div>
+            <div class="hero-stat-val">12<span>k</span></div>
+            <div class="hero-stat-label">// downloads</div>
+          </div>
+          <div>
+            <div class="hero-stat-val">32<span>+</span></div>
+            <div class="hero-stat-label">// tutorials</div>
+          </div>
+          <div>
+            <div class="hero-stat-val">850<span>+</span></div>
+            <div class="hero-stat-label">// community</div>
+          </div>
+        </div>
+      </div>
+      <div class="hero-terminal">
+        <div class="terminal-bar">
+          <div class="terminal-dot" style="background:#ff5f57"></div>
+          <div class="terminal-dot" style="background:#ffbd2e"></div>
+          <div class="terminal-dot" style="background:#28c840"></div>
+          <div class="terminal-title">sketch.ino</div>
+        </div>
+        <div class="terminal-body">
+          <div class="t-comment">// Smart Home Controller v2.0</div>
+          <div><span class="t-keyword">#include</span> <span class="t-string">&lt;WiFi.h&gt;</span></div>
+          <div><span class="t-keyword">#include</span> <span class="t-string">&lt;DHT.h&gt;</span></div>
+          <br>
+          <div><span class="t-keyword">const</span> <span class="t-var">int</span> <span class="t-func">LED_PIN</span> = <span class="t-string">13</span>;</div>
+          <div><span class="t-var">DHT</span> dht(<span class="t-string">2</span>, <span class="t-func">DHT22</span>);</div>
+          <br>
+          <div><span class="t-keyword">void</span> <span class="t-func">setup</span>() {</div>
+          <div>&nbsp;&nbsp;<span class="t-func">Serial</span>.begin(<span class="t-string">9600</span>);</div>
+          <div>&nbsp;&nbsp;<span class="t-func">pinMode</span>(LED_PIN, <span class="t-func">OUTPUT</span>);</div>
+          <div>&nbsp;&nbsp;dht.<span class="t-func">begin</span>();</div>
+          <div>}</div>
+          <br>
+          <div><span class="t-keyword">void</span> <span class="t-func">loop</span>() {</div>
+          <div>&nbsp;&nbsp;<span class="t-var">float</span> temp = dht.<span class="t-func">readTemperature</span>();<span class="t-cursor"></span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LATEST PROJECTS -->
+  <section class="section">
+    <div class="container">
+      <div class="section-head flex-between" style="flex-wrap:wrap;gap:16px">
+        <div>
+          <div class="section-label">// recently_added</div>
+          <h2 class="section-title">Latest Projects</h2>
+          <p class="section-sub">Fresh builds straight from the workbench.</p>
+        </div>
+        <button class="btn btn-secondary" onclick="showPage('projects')">View All →</button>
+      </div>
+      <div class="projects-grid" id="latestProjects"></div>
+    </div>
+  </section>
+
+  <!-- POPULAR DOWNLOADS -->
+  <section class="section section-alt">
+    <div class="container">
+      <div class="section-head">
+        <div class="section-label">// top_downloads</div>
+        <h2 class="section-title">Popular Downloads</h2>
+        <p class="section-sub">Most downloaded APKs from the community.</p>
+      </div>
+      <div class="grid-2" id="popularDownloads"></div>
+    </div>
+  </section>
+
+  <!-- CATEGORIES -->
+  <section class="section">
+    <div class="container">
+      <div class="section-head" style="text-align:center">
+        <div class="section-label">// explore_by_type</div>
+        <h2 class="section-title">Browse Categories</h2>
+        <p class="section-sub" style="margin:0 auto">Find exactly what you're looking for.</p>
+      </div>
+      <div class="grid-4">
+        <div class="cat-card" onclick="showPage('arduino')">
+          <div class="cat-icon arduino">🤖</div>
+          <div class="cat-title">Arduino Projects</div>
+          <div class="cat-count">24 projects</div>
+        </div>
+        <div class="cat-card" onclick="showPage('flutter')">
+          <div class="cat-icon flutter">📱</div>
+          <div class="cat-title">Flutter Apps</div>
+          <div class="cat-count">12 apps</div>
+        </div>
+        <div class="cat-card" onclick="showPage('apk')">
+          <div class="cat-icon apk">📦</div>
+          <div class="cat-title">APK Downloads</div>
+          <div class="cat-count">18 APKs</div>
+        </div>
+        <div class="cat-card" onclick="showPage('circuits')">
+          <div class="cat-icon circuit">⚡</div>
+          <div class="cat-title">Circuit Designs</div>
+          <div class="cat-count">14 designs</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- NEWSLETTER -->
+  <section class="section section-alt">
+    <div class="container">
+      <div class="newsletter">
+        <div class="section-label">// stay_updated</div>
+        <h2 class="section-title">Get New Projects First</h2>
+        <p>Join 850+ makers and developers. Get notified when new Arduino projects, Flutter apps, and tutorials drop.</p>
+        <div class="newsletter-form">
+          <input class="form-input" type="email" placeholder="your@email.com">
+          <button class="btn btn-primary" onclick="showToast('🎉 Subscribed!','success')">Subscribe</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="footer-brand">Dev<span>Forge</span></div>
+          <p class="footer-desc">Building and sharing Arduino projects, Flutter apps, circuit designs, and development tutorials for the maker community.</p>
+          <div class="footer-social mt-4">
+            <div class="footer-social-link">🐦</div>
+            <div class="footer-social-link">📺</div>
+            <div class="footer-social-link">💻</div>
+            <div class="footer-social-link">📸</div>
+          </div>
+        </div>
+        <div class="footer-col">
+          <h5>Projects</h5>
+          <a class="footer-link" onclick="showPage('arduino')">Arduino Projects</a>
+          <a class="footer-link" onclick="showPage('flutter')">Flutter Apps</a>
+          <a class="footer-link" onclick="showPage('circuits')">Circuit Designs</a>
+          <a class="footer-link" onclick="showPage('apk')">APK Downloads</a>
+        </div>
+        <div class="footer-col">
+          <h5>Learn</h5>
+          <a class="footer-link" onclick="showPage('tutorials')">Tutorials</a>
+          <a class="footer-link">Beginner Guide</a>
+          <a class="footer-link">Arduino Basics</a>
+          <a class="footer-link">Flutter Docs</a>
+        </div>
+        <div class="footer-col">
+          <h5>Connect</h5>
+          <a class="footer-link" onclick="showPage('about')">About</a>
+          <a class="footer-link" onclick="showPage('contact')">Contact</a>
+          <a class="footer-link">GitHub</a>
+          <a class="footer-link">YouTube</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2025 DevForge. Built with ❤️ for makers.</span>
+        <span>Open Source · MIT License</span>
+      </div>
+    </div>
+  </footer>
+</div>
+
+<!-- ============================================================
+     PAGE: ALL PROJECTS
+============================================================ -->
+<div class="page" id="page-projects">
+  <div class="page-header">
+    <div class="container">
+      <div class="section-label">// all_projects</div>
+      <h1 class="page-title">All Projects</h1>
+      <p class="page-desc">Browse, filter, and explore all published projects.</p>
+    </div>
+  </div>
+  <div class="section">
+    <div class="container">
+      <div class="filter-bar">
+        <span class="filter-label">Category:</span>
+        <div class="filter-group">
+          <button class="filter-btn active" onclick="filterProjects('all',this)">All</button>
+          <button class="filter-btn" onclick="filterProjects('arduino',this)">Arduino</button>
+          <button class="filter-btn" onclick="filterProjects('flutter',this)">Flutter</button>
+          <button class="filter-btn" onclick="filterProjects('apk',this)">APK</button>
+          <button class="filter-btn" onclick="filterProjects('circuit',this)">Circuit</button>
+        </div>
+        <div class="filter-sep"></div>
+        <span class="filter-label">Sort:</span>
+        <select class="sort-select" onchange="sortProjects(this.value)">
+          <option value="newest">Newest First</option>
+          <option value="downloads">Most Downloaded</option>
+          <option value="popular">Most Popular</option>
+        </select>
+      </div>
+      <div class="projects-grid" id="allProjectsGrid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     PAGE: SINGLE PROJECT
+============================================================ -->
+<div class="page" id="page-project">
+  <div class="project-hero">
+    <div class="container">
+      <div class="breadcrumb">
+        <span onclick="showPage('home')" style="cursor:pointer;hover:color:var(--accent)">Home</span>
+        <span class="breadcrumb-sep">›</span>
+        <span id="proj-cat-breadcrumb" onclick="showPage('arduino')" style="cursor:pointer">Arduino</span>
+        <span class="breadcrumb-sep">›</span>
+        <span id="proj-title-breadcrumb">Project</span>
+      </div>
+      <div class="project-meta-bar" id="proj-meta-bar"></div>
+      <h1 class="project-title-h" id="proj-title"></h1>
+      <p style="max-width:680px;font-size:1rem" id="proj-summary"></p>
+    </div>
+  </div>
+  <div class="container" style="padding-bottom:80px">
+    <div class="project-layout">
+      <div class="project-main">
+        <div id="proj-featured-img" class="mt-6"></div>
+        <div class="divider"></div>
+        <h3>📋 Project Overview</h3>
+        <p class="mt-3" id="proj-overview"></p>
+        <div class="divider"></div>
+        <h3>✅ Features</h3>
+        <div class="feature-list mt-3" id="proj-features"></div>
+        <div class="divider"></div>
+        <h3>🔩 Components Required</h3>
+        <div class="components-list mt-3" id="proj-components"></div>
+        <div class="divider"></div>
+        <h3>💻 Code</h3>
+        <div class="mt-3" id="proj-code"></div>
+        <div class="divider"></div>
+        <h3>🖼️ Gallery</h3>
+        <div class="gallery-grid mt-3" id="proj-gallery"></div>
+        <div class="divider"></div>
+        <h3>🎬 Video Tutorial</h3>
+        <div class="video-embed mt-3">
+          <div class="video-placeholder">
+            <div class="play-btn">▶</div>
+            <span>Watch on YouTube</span>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <h3>💬 Comments</h3>
+        <div id="proj-comments" class="mt-3"></div>
+        <div class="comment-form mt-4">
+          <h4 style="margin-bottom:16px">Leave a Comment</h4>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Name</label>
+              <input class="form-input" type="text" placeholder="Your name">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email</label>
+              <input class="form-input" type="email" placeholder="your@email.com">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Message</label>
+            <textarea class="form-input form-textarea" placeholder="Ask a question or share your experience..."></textarea>
+          </div>
+          <button class="btn btn-primary" onclick="showToast('💬 Comment posted!','success')">Post Comment</button>
+        </div>
+      </div>
+      <div class="project-sidebar" id="proj-sidebar"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     PAGE: ARDUINO
+============================================================ -->
+<div class="page" id="page-arduino">
+  <div class="page-header">
+    <div class="container">
+      <div class="section-label">// hardware_projects</div>
+      <h1 class="page-title">🤖 Arduino Projects</h1>
+      <p class="page-desc">From blinking LEDs to IoT systems — hardware builds for all skill levels.</p>
+    </div>
+  </div>
+  <div class="section">
+    <div class="container">
+      <div class="filter-bar">
+        <span class="filter-label">Difficulty:</span>
+        <div class="filter-group">
+          <button class="filter-btn active">All Levels</button>
+          <button class="filter-btn">🟢 Beginner</button>
+          <button class="filter-btn">🟡 Intermediate</button>
+          <button class="filter-btn">🔴 Advanced</button>
+        </div>
+        <div class="filter-sep"></div>
+        <select class="sort-select">
+          <option>Newest First</option>
+          <option>Most Popular</option>
+          <option>Beginner First</option>
+        </select>
+      </div>
+      <div class="projects-grid" id="arduinoGrid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     PAGE: FLUTTER
+============================================================ -->
+<div class="page" id="page-flutter">
+  <div class="page-header">
+    <div class="container">
+      <div class="section-label">// mobile_apps</div>
+      <h1 class="page-title">📱 Flutter Apps</h1>
+      <p class="page-desc">Beautiful cross-platform apps built with Flutter — with source code and APK downloads.</p>
+    </div>
+  </div>
+  <div class="section">
+    <div class="container">
+      <div class="filter-bar">
+        <span class="filter-label">Type:</span>
+        <div class="filter-group">
+          <button class="filter-btn active">All</button>
+          <button class="filter-btn">IoT Control</button>
+          <button class="filter-btn">Utilities</button>
+          <button class="filter-btn">Games</button>
+          <button class="filter-btn">Tools</button>
+        </div>
+      </div>
+      <div class="projects-grid" id="flutterGrid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     PAGE: APK DOWNLOADS
+============================================================ -->
+<div class="page" id="page-apk">
+  <div class="page-header">
+    <div class="container">
+      <div class="section-label">// download_center</div>
+      <h1 class="page-title">📦 APK Downloads</h1>
+      <p class="page-desc">Download Android apps directly. All APKs are safe, tested, and open source.</p>
+    </div>
+  </div>
+  <div class="section">
+    <div class="container">
+      <div class="filter-bar">
+        <span class="filter-label">Category:</span>
+        <div class="filter-group">
+          <button class="filter-btn active">All APKs</button>
+          <button class="filter-btn">Arduino Control</button>
+          <button class="filter-btn">Utilities</button>
+          <button class="filter-btn">Sensors</button>
+        </div>
+        <div class="filter-sep"></div>
+        <select class="sort-select">
+          <option>Most Downloaded</option>
+          <option>Newest First</option>
+          <option>Alphabetical</option>
+        </select>
+      </div>
+      <div id="apkList" style="display:flex;flex-direction:column;gap:14px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     PAGE: CIRCUITS
+============================================================ -->
+<div class="page" id="page-circuits">
+  <div class="page-header">
+    <div class="container">
+      <div class="section-label">// electronics_design</div>
+      <h1 class="page-title">⚡ Circuit Designs</h1>
+      <p class="page-desc">Schematics, PCB designs, and wiring diagrams for Arduino and IoT projects.</p>
+    </div>
+  </div>
+  <div class="section">
+    <div class="container">
+      <div class="filter-bar">
+        <span class="filter-label">Type:</span>
+        <div class="filter-group">
+          <button class="filter-btn active">All</button>
+          <button class="filter-btn">Arduino Circuits</button>
+          <button class="filter-btn">Sensor Circuits</button>
+          <button class="filter-btn">IoT Circuits</button>
+          <button class="filter-btn">Power Circuits</button>
+        </div>
+      </div>
+      <div class="grid-3" id="circuitsGrid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     PAGE: TUTORIALS
+============================================================ -->
+<div class="page" id="page-tutorials">
+  <div class="page-header">
+    <div class="container">
+      <div class="section-label">// learning_resources</div>
+      <h1 class="page-title">📚 Tutorials</h1>
+      <p class="page-desc">Step-by-step guides for Arduino, Flutter, and electronics fundamentals.</p>
+    </div>
+  </div>
+  <div class="section">
+    <div class="container">
+      <div class="filter-bar">
+        <span class="filter-label">Topic:</span>
+        <div class="filter-group">
+          <button class="filter-btn active">All Topics</button>
+          <button class="filter-btn">Arduino</button>
+          <button class="filter-btn">Flutter</button>
+          <button class="filter-btn">Electronics</button>
+          <button class="filter-btn">IoT</button>
+        </div>
+      </div>
+      <div class="grid-3" id="tutorialsGrid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     PAGE: ABOUT
+============================================================ -->
+<div class="page" id="page-about">
+  <div class="about-hero section">
+    <div class="container container--narrow" style="text-align:center">
+      <div class="about-avatar">👨‍💻</div>
+      <div class="section-label">// about_me</div>
+      <h1>Hey, I'm a Maker &<br>Developer</h1>
+      <p class="mt-4" style="max-width:560px;margin-left:auto;margin-right:auto;font-size:1.05rem">I build Arduino-powered hardware and Flutter apps, then share everything — schematics, code, APKs, and tutorials — so you can build it too. Passionate about IoT, embedded systems, and cross-platform development.</p>
+      <div class="social-links mt-6">
+        <div class="social-link" title="GitHub">💻</div>
+        <div class="social-link" title="YouTube">📺</div>
+        <div class="social-link" title="Twitter">🐦</div>
+        <div class="social-link" title="LinkedIn">💼</div>
+        <div class="social-link" title="Instagram">📸</div>
+      </div>
+    </div>
+  </div>
+  <div class="section section-alt">
+    <div class="container container--narrow">
+      <div class="section-label">// skills & stack</div>
+      <h2 class="section-title">What I Work With</h2>
+      <div class="skills-grid">
+        <div class="skill-item">
+          <div class="flex-between mb-2"><span class="fw-600">Arduino / C++</span><span class="text-muted text-sm">95%</span></div>
+          <div class="skill-bar"><div class="skill-fill" style="width:95%"></div></div>
+        </div>
+        <div class="skill-item">
+          <div class="flex-between mb-2"><span class="fw-600">Flutter / Dart</span><span class="text-muted text-sm">88%</span></div>
+          <div class="skill-bar"><div class="skill-fill" style="width:88%"></div></div>
+        </div>
+        <div class="skill-item">
+          <div class="flex-between mb-2"><span class="fw-600">Circuit Design</span><span class="text-muted text-sm">80%</span></div>
+          <div class="skill-bar"><div class="skill-fill" style="width:80%"></div></div>
+        </div>
+        <div class="skill-item">
+          <div class="flex-between mb-2"><span class="fw-600">Firebase / Supabase</span><span class="text-muted text-sm">75%</span></div>
+          <div class="skill-bar"><div class="skill-fill" style="width:75%"></div></div>
+        </div>
+        <div class="skill-item">
+          <div class="flex-between mb-2"><span class="fw-600">IoT / MQTT</span><span class="text-muted text-sm">85%</span></div>
+          <div class="skill-bar"><div class="skill-fill" style="width:85%"></div></div>
+        </div>
+        <div class="skill-item">
+          <div class="flex-between mb-2"><span class="fw-600">PCB Design (KiCad)</span><span class="text-muted text-sm">70%</span></div>
+          <div class="skill-bar"><div class="skill-fill" style="width:70%"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="section">
+    <div class="container container--narrow">
+      <div class="section-label">// milestones</div>
+      <h2 class="section-title">By The Numbers</h2>
+      <div class="grid-4 mt-6">
+        <div style="text-align:center">
+          <div class="hero-stat-val">48<span style="color:var(--accent)">+</span></div>
+          <div class="hero-stat-label">Projects Published</div>
+        </div>
+        <div style="text-align:center">
+          <div class="hero-stat-val">12<span style="color:var(--accent)">k</span></div>
+          <div class="hero-stat-label">APK Downloads</div>
+        </div>
+        <div style="text-align:center">
+          <div class="hero-stat-val">32<span style="color:var(--accent)">+</span></div>
+          <div class="hero-stat-label">Tutorials Written</div>
+        </div>
+        <div style="text-align:center">
+          <div class="hero-stat-val">850<span style="color:var(--accent)">+</span></div>
+          <div class="hero-stat-label">Community Members</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     PAGE: CONTACT
+============================================================ -->
+<div class="page" id="page-contact">
+  <div class="container">
+    <div class="contact-layout">
+      <div class="contact-info">
+        <div class="section-label">// get_in_touch</div>
+        <h2>Let's Build<br>Something Together</h2>
+        <p class="mt-4">Have a project idea, question about a tutorial, or just want to say hi? I'd love to hear from you.</p>
+        <div class="mt-6">
+          <div class="contact-method">
+            <div class="contact-method-icon">📧</div>
+            <div>
+              <div class="fw-600 text-sm">Email</div>
+              <div class="text-muted text-sm">hello@devforge.io</div>
+            </div>
+          </div>
+          <div class="contact-method">
+            <div class="contact-method-icon">💻</div>
+            <div>
+              <div class="fw-600 text-sm">GitHub</div>
+              <div class="text-muted text-sm">github.com/devforge</div>
+            </div>
+          </div>
+          <div class="contact-method">
+            <div class="contact-method-icon">📺</div>
+            <div>
+              <div class="fw-600 text-sm">YouTube</div>
+              <div class="text-muted text-sm">youtube.com/@devforge</div>
+            </div>
+          </div>
+          <div class="contact-method">
+            <div class="contact-method-icon">🐦</div>
+            <div>
+              <div class="fw-600 text-sm">Twitter / X</div>
+              <div class="text-muted text-sm">@devforgeio</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="contact-form-card">
+          <div class="section-label mb-4">// send_message</div>
+          <div class="form-group">
+            <label class="form-label">Your Name</label>
+            <input class="form-input" type="text" placeholder="John Maker">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email Address</label>
+            <input class="form-input" type="email" placeholder="you@example.com">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Subject</label>
+            <select class="form-input">
+              <option>Project Question</option>
+              <option>Tutorial Request</option>
+              <option>Bug Report</option>
+              <option>Collaboration</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Message</label>
+            <textarea class="form-input form-textarea" placeholder="Tell me about your project or question..."></textarea>
+          </div>
+          <button class="btn btn-primary" style="width:100%" onclick="showToast('✅ Message sent!','success')">Send Message →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     PAGE: ADMIN DASHBOARD
+============================================================ -->
+<div class="page" id="page-admin">
+  <div class="admin-layout">
+    <!-- Admin Sidebar -->
+    <div class="admin-sidebar">
+      <div class="admin-sidebar-title">Overview</div>
+      <div class="admin-nav-item active" onclick="adminPanel('dashboard',this)"><span class="nav-icon">📊</span>Dashboard</div>
+      <div class="admin-sidebar-title">Content</div>
+      <div class="admin-nav-item" onclick="adminPanel('addProject',this)"><span class="nav-icon">➕</span>Add Project</div>
+      <div class="admin-nav-item" onclick="adminPanel('manageProjects',this)"><span class="nav-icon">📁</span>Manage Projects</div>
+      <div class="admin-nav-item" onclick="adminPanel('addTutorial',this)"><span class="nav-icon">📝</span>Add Tutorial</div>
+      <div class="admin-nav-item" onclick="adminPanel('addCircuit',this)"><span class="nav-icon">⚡</span>Add Circuit</div>
+      <div class="admin-sidebar-title">Media</div>
+      <div class="admin-nav-item" onclick="adminPanel('uploadApk',this)"><span class="nav-icon">📦</span>Upload APK</div>
+      <div class="admin-nav-item" onclick="adminPanel('uploadImages',this)"><span class="nav-icon">🖼️</span>Upload Images</div>
+      <div class="admin-sidebar-title">Community</div>
+      <div class="admin-nav-item" onclick="adminPanel('comments',this)"><span class="nav-icon">💬</span>Comments</div>
+      <div class="admin-sidebar-title">Site</div>
+      <div class="admin-nav-item" onclick="adminPanel('settings',this)"><span class="nav-icon">⚙️</span>Settings</div>
+      <div class="admin-nav-item" onclick="showPage('home')" style="margin-top:16px"><span class="nav-icon">🏠</span>Back to Site</div>
+    </div>
+
+    <!-- Admin Main Area -->
+    <div class="admin-main">
+
+      <!-- Dashboard -->
+      <div class="admin-panel active" id="panel-dashboard">
+        <div class="admin-header">
+          <h2>Dashboard</h2>
+          <p>Overview of your DevForge site</p>
+        </div>
+        <div class="stat-cards">
+          <div class="stat-card">
+            <div class="stat-card-val">48</div>
+            <div class="stat-card-label">Total Projects</div>
+            <div class="stat-card-change">↑ +3 this month</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-val">12k</div>
+            <div class="stat-card-label">APK Downloads</div>
+            <div class="stat-card-change">↑ +842 this week</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-val">32</div>
+            <div class="stat-card-label">Tutorials</div>
+            <div class="stat-card-change">↑ +2 this month</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-card-val">156</div>
+            <div class="stat-card-label">Comments</div>
+            <div class="stat-card-change" style="color:var(--orange)">⚠ 8 pending</div>
+          </div>
+        </div>
+        <h3 style="margin-bottom:16px;color:var(--text-primary)">Recent Projects</h3>
+        <table class="admin-table">
+          <thead>
+            <tr><th>Title</th><th>Category</th><th>Downloads</th><th>Date</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="adminRecentTable"></tbody>
+        </table>
+      </div>
+
+      <!-- Add Project -->
+      <div class="admin-panel" id="panel-addProject">
+        <div class="admin-header"><h2>Add New Project</h2><p>Publish a new Arduino, Flutter, or circuit project</p></div>
+        <div class="admin-form">
+          <div class="form-group">
+            <label class="form-label">Project Title *</label>
+            <input class="form-input" type="text" placeholder="Smart Home Temperature Monitor">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Category *</label>
+              <select class="form-input">
+                <option>Arduino Project</option>
+                <option>Flutter App</option>
+                <option>Circuit Design</option>
+                <option>Tutorial</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Difficulty</label>
+              <select class="form-input">
+                <option>Beginner</option>
+                <option>Intermediate</option>
+                <option>Advanced</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Short Description *</label>
+            <input class="form-input" type="text" placeholder="A brief one-line description of the project">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Full Description (Markdown supported)</label>
+            <textarea class="form-input form-textarea" style="min-height:200px" placeholder="## Overview&#10;&#10;Describe your project in detail..."></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Features (one per line)</label>
+            <textarea class="form-input form-textarea" placeholder="Real-time temperature monitoring&#10;Wi-Fi connectivity&#10;OLED display output"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Components Required (one per line)</label>
+            <textarea class="form-input form-textarea" placeholder="Arduino Uno&#10;DHT22 Sensor&#10;0.96&quot; OLED Display&#10;10kΩ Resistor (x2)"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Code (Arduino / Dart)</label>
+            <textarea class="form-input form-textarea" style="min-height:200px;font-family:var(--font-mono);font-size:0.82rem" placeholder="// Paste your code here..."></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">YouTube Video URL</label>
+            <input class="form-input" type="url" placeholder="https://youtube.com/watch?v=...">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Featured Image</label>
+            <div class="upload-zone" onclick="showToast('📁 File picker opened','success')">
+              <div class="upload-icon">🖼️</div>
+              <div class="upload-text">Drop image here or <strong>click to browse</strong></div>
+              <div class="text-muted text-sm mt-2">PNG, JPG up to 5MB</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:12px">
+            <button class="btn btn-primary" onclick="showToast('✅ Project published!','success')">Publish Project</button>
+            <button class="btn btn-secondary" onclick="showToast('💾 Draft saved','success')">Save Draft</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Manage Projects -->
+      <div class="admin-panel" id="panel-manageProjects">
+        <div class="admin-header"><h2>Manage Projects</h2><p>Edit or delete existing projects</p></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+          <input class="form-input" type="text" placeholder="Search projects..." style="max-width:320px">
+          <button class="btn btn-primary btn-sm" onclick="adminPanel('addProject',null)">+ Add New</button>
+        </div>
+        <table class="admin-table">
+          <thead>
+            <tr><th>Title</th><th>Category</th><th>Downloads</th><th>Status</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="adminManageTable"></tbody>
+        </table>
+      </div>
+
+      <!-- Add Tutorial -->
+      <div class="admin-panel" id="panel-addTutorial">
+        <div class="admin-header"><h2>Add Tutorial</h2><p>Write a new guide or how-to article</p></div>
+        <div class="admin-form">
+          <div class="form-group">
+            <label class="form-label">Tutorial Title *</label>
+            <input class="form-input" type="text" placeholder="Getting Started with Arduino: Blink an LED">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Topic</label>
+              <select class="form-input"><option>Arduino</option><option>Flutter</option><option>Electronics</option><option>IoT</option></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Level</label>
+              <select class="form-input"><option>Beginner</option><option>Intermediate</option><option>Advanced</option></select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Content (Markdown)</label>
+            <textarea class="form-input form-textarea" style="min-height:300px" placeholder="# Tutorial Title&#10;&#10;## Introduction&#10;..."></textarea>
+          </div>
+          <button class="btn btn-primary" onclick="showToast('📚 Tutorial published!','success')">Publish Tutorial</button>
+        </div>
+      </div>
+
+      <!-- Add Circuit -->
+      <div class="admin-panel" id="panel-addCircuit">
+        <div class="admin-header"><h2>Add Circuit Design</h2><p>Upload a schematic or wiring diagram</p></div>
+        <div class="admin-form">
+          <div class="form-group">
+            <label class="form-label">Circuit Title *</label>
+            <input class="form-input" type="text" placeholder="Arduino UNO Temperature Sensor Circuit">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Category</label>
+              <select class="form-input"><option>Arduino Circuit</option><option>Sensor Circuit</option><option>IoT Circuit</option><option>Power Circuit</option></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Related Project</label>
+              <select class="form-input"><option>None</option><option>Temp Monitor</option><option>Smart Lock</option></select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Circuit Diagram</label>
+            <div class="upload-zone">
+              <div class="upload-icon">⚡</div>
+              <div class="upload-text">Drop circuit image or <strong>click to browse</strong></div>
+              <div class="text-muted text-sm mt-2">PNG, SVG, PDF up to 10MB</div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Description</label>
+            <textarea class="form-input form-textarea" placeholder="Describe the circuit components and connections..."></textarea>
+          </div>
+          <button class="btn btn-primary" onclick="showToast('⚡ Circuit published!','success')">Publish Circuit</button>
+        </div>
+      </div>
+
+      <!-- Upload APK -->
+      <div class="admin-panel" id="panel-uploadApk">
+        <div class="admin-header"><h2>Upload APK</h2><p>Add a new app to the download center</p></div>
+        <div class="admin-form">
+          <div class="form-group">
+            <label class="form-label">App Name *</label>
+            <input class="form-input" type="text" placeholder="ArduinoControl Pro">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Version *</label>
+              <input class="form-input" type="text" placeholder="v2.1.0">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Category</label>
+              <select class="form-input"><option>Arduino Control</option><option>Utilities</option><option>Sensors</option></select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">APK File</label>
+            <div class="upload-zone">
+              <div class="upload-icon">📦</div>
+              <div class="upload-text">Drop <strong>.apk</strong> file here or click to browse</div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">App Icon</label>
+            <div class="upload-zone">
+              <div class="upload-icon">🎨</div>
+              <div class="upload-text">Drop app icon here or click to browse</div>
+              <div class="text-muted text-sm mt-2">512×512 PNG recommended</div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Description</label>
+            <textarea class="form-input form-textarea" placeholder="Describe the app features and usage..."></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Permissions Required (one per line)</label>
+            <textarea class="form-input form-textarea" style="min-height:80px" placeholder="Bluetooth&#10;Internet&#10;Camera"></textarea>
+          </div>
+          <button class="btn btn-primary" onclick="showToast('📦 APK uploaded!','success')">Upload APK</button>
+        </div>
+      </div>
+
+      <!-- Upload Images -->
+      <div class="admin-panel" id="panel-uploadImages">
+        <div class="admin-header"><h2>Upload Images</h2><p>Manage media for your projects</p></div>
+        <div class="upload-zone" style="margin-bottom:24px">
+          <div class="upload-icon">📤</div>
+          <div class="upload-text">Drag & drop multiple images or <strong>click to select</strong></div>
+          <div class="text-muted text-sm mt-2">PNG, JPG, WebP up to 5MB each</div>
+        </div>
+        <div class="grid-4" id="mediaGrid">
+          <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:2rem">🖼️</div>
+          <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:2rem">🔌</div>
+          <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:2rem">📱</div>
+          <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:2rem">⚡</div>
+        </div>
+      </div>
+
+      <!-- Comments -->
+      <div class="admin-panel" id="panel-comments">
+        <div class="admin-header"><h2>Manage Comments</h2><p>Review, approve, or delete user comments</p></div>
+        <table class="admin-table">
+          <thead>
+            <tr><th>Author</th><th>Comment</th><th>Project</th><th>Date</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="commentsTable"></tbody>
+        </table>
+      </div>
+
+      <!-- Settings -->
+      <div class="admin-panel" id="panel-settings">
+        <div class="admin-header"><h2>Site Settings</h2><p>Configure your DevForge site</p></div>
+        <div class="admin-form">
+          <h3>General</h3>
+          <div class="form-group mt-4">
+            <label class="form-label">Site Name</label>
+            <input class="form-input" type="text" value="DevForge">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Site Description</label>
+            <input class="form-input" type="text" value="Arduino & Flutter Project Hub">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Your Name</label>
+            <input class="form-input" type="text" placeholder="Your name">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Contact Email</label>
+            <input class="form-input" type="email" placeholder="hello@devforge.io">
+          </div>
+          <div class="form-group">
+            <label class="form-label">GitHub URL</label>
+            <input class="form-input" type="url" placeholder="https://github.com/yourusername">
+          </div>
+          <div class="form-group">
+            <label class="form-label">YouTube Channel URL</label>
+            <input class="form-input" type="url" placeholder="https://youtube.com/@yourchannel">
+          </div>
+          <div class="divider"></div>
+          <h3>Analytics</h3>
+          <div class="form-group mt-4">
+            <label class="form-label">Google Analytics ID</label>
+            <input class="form-input" type="text" placeholder="G-XXXXXXXXXX">
+          </div>
+          <button class="btn btn-primary" onclick="showToast('⚙️ Settings saved!','success')">Save Settings</button>
+        </div>
+      </div>
+
+    </div><!-- /admin-main -->
+  </div><!-- /admin-layout -->
+</div>
+
+<!-- ============================================================
+     JAVASCRIPT
+============================================================ -->
+<script>
+/* ============================================================
+   DATA
+============================================================ */
+const PROJECTS = [
+  {
+    id:1, title:'Smart Home Temperature Monitor', category:'arduino', badge:'arduino',
+    icon:'🌡️', difficulty:'Intermediate', downloads:1240, views:8430,
+    desc:'Control room temperature with an ESP8266, DHT22 sensor, and OLED display. Monitor from your phone via the companion Flutter app.',
+    overview:'This project creates a complete smart home temperature monitoring system using an ESP8266 microcontroller paired with a DHT22 temperature and humidity sensor. Data is displayed locally on an OLED screen and transmitted over Wi-Fi to a Firebase Realtime Database, accessible via a companion Flutter app.',
+    features:['Real-time temperature & humidity tracking','OLED 0.96" local display','Firebase cloud data sync','Flutter companion app with live graph','Configurable alert thresholds','Low-power sleep mode between readings'],
+    components:['ESP8266 NodeMCU','DHT22 Temperature & Humidity Sensor','0.96" I2C OLED Display','10kΩ Resistor (x2)','Breadboard & Jumper Wires','Micro USB Cable'],
+    code:`#include <ESP8266WiFi.h>
+#include <DHT.h>
+#include <Wire.h>
+#include <Adafruit_SSD1306.h>
+#include <Firebase_ESP_Client.h>
+
+#define DHTPIN 2
+#define DHTTYPE DHT22
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+
+const char* ssid = "YOUR_WIFI_SSID";
+const char* password = "YOUR_WIFI_PASS";
+
+DHT dht(DHTPIN, DHTTYPE);
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
+FirebaseData fbdo;
+FirebaseAuth auth;
+FirebaseConfig config;
+
+void setup() {
+  Serial.begin(115200);
+  dht.begin();
+  
+  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+    Serial.println("SSD1306 allocation failed");
+    for(;;);
+  }
+  
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  
+  config.database_url = "YOUR_FIREBASE_URL";
+  Firebase.begin(&config, &auth);
+}
+
+void loop() {
+  float h = dht.readHumidity();
+  float t = dht.readTemperature();
+  
+  if (isnan(h) || isnan(t)) {
+    Serial.println("DHT read failed!");
+    return;
+  }
+  
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(0,0);
+  display.print("Temp: ");
+  display.print(t);
+  display.println(" C");
+  display.print("Hum:  ");
+  display.print(h);
+  display.println(" %");
+  display.display();
+  
+  if (Firebase.ready()) {
+    Firebase.RTDB.setFloat(&fbdo, "/sensor/temperature", t);
+    Firebase.RTDB.setFloat(&fbdo, "/sensor/humidity", h);
+  }
+  
+  delay(2000);
+}`,
+    lang:'arduino',
+    date:'2025-01-15',
+    apkSize:'4.2 MB',
+    version:'v1.3.0'
+  },
+  {
+    id:2, title:'Flutter Arduino BLE Controller', category:'flutter', badge:'flutter',
+    icon:'📱', difficulty:'Intermediate', downloads:890, views:5200,
+    desc:'Control any Arduino project wirelessly via Bluetooth Low Energy directly from a beautiful Flutter app.',
+    overview:'A production-ready Flutter application that connects to any Arduino project via BLE. Features a customizable dashboard with sliders, toggles, and a real-time chart for sensor data visualization.',
+    features:['BLE device scanning & pairing','Custom control widgets (slider, toggle, button)','Real-time sensor data chart','Save & load control profiles','Dark/Light theme support','Works with any BLE-enabled Arduino (HC-08, ESP32)'],
+    components:['Arduino with HC-08 / ESP32 BLE','Android phone (Flutter app)','USB cable for initial upload'],
+    code:`import 'package:flutter/material.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+
+class BLEController extends StatefulWidget {
+  @override
+  _BLEControllerState createState() => _BLEControllerState();
+}
+
+class _BLEControllerState extends State<BLEController> {
+  FlutterBluePlus flutterBlue = FlutterBluePlus.instance;
+  List<ScanResult> scanResults = [];
+  BluetoothDevice? connectedDevice;
+  BluetoothCharacteristic? txChar;
+  double ledBrightness = 0;
+
+  void startScan() {
+    flutterBlue.startScan(timeout: Duration(seconds: 5));
+    flutterBlue.scanResults.listen((results) {
+      setState(() => scanResults = results);
+    });
+  }
+
+  void sendCommand(String cmd) async {
+    if (txChar != null) {
+      await txChar!.write(cmd.codeUnits);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('BLE Controller')),
+      body: Column(
+        children: [
+          ElevatedButton(
+            onPressed: startScan,
+            child: Text('Scan Devices'),
+          ),
+          Slider(
+            value: ledBrightness,
+            max: 255,
+            onChanged: (val) {
+              setState(() => ledBrightness = val);
+              sendCommand('LED:' + val.toInt().toString());
+            },
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              ElevatedButton(
+                onPressed: () => sendCommand('ON'),
+                child: Text('Turn ON'),
+              ),
+              ElevatedButton(
+                onPressed: () => sendCommand('OFF'),
+                child: Text('Turn OFF'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}`,
+    lang:'dart',
+    date:'2025-01-08',
+    apkSize:'12.8 MB',
+    version:'v2.0.1'
+  },
+  {
+    id:3, title:'RFID Smart Door Lock', category:'arduino', badge:'arduino',
+    icon:'🔐', difficulty:'Advanced', downloads:640, views:4100,
+    desc:'Build a keypad & RFID-secured door lock system with an Arduino Nano, MFRC522 module, and a servo motor.',
+    overview:'A comprehensive security project that combines RFID card authentication with a 4×4 keypad for two-factor access control. Logs all access attempts with timestamps to an SD card.',
+    features:['RFID card & keypad 2FA access','Access log with timestamps on SD','Wrong attempt lockout (3 tries)','Admin mode to add/remove cards','LCD status display','Battery backup support'],
+    components:['Arduino Nano','MFRC522 RFID Module','4×4 Keypad Matrix','16x2 LCD I2C','Servo Motor SG90','SD Card Module','9V Battery + Holder'],
+    code:`#include <SPI.h>
+#include <MFRC522.h>
+#include <Keypad.h>
+#include <LiquidCrystal_I2C.h>
+#include <Servo.h>
+
+#define RST_PIN 9
+#define SS_PIN 10
+#define SERVO_PIN 6
+
+MFRC522 mfrc522(SS_PIN, RST_PIN);
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+Servo doorServo;
+
+const byte ROWS = 4, COLS = 4;
+char keys[ROWS][COLS] = {
+  {'1','2','3','A'},
+  {'4','5','6','B'},
+  {'7','8','9','C'},
+  {'*','0','#','D'}
+};
+byte rowPins[ROWS] = {2,3,4,5};
+byte colPins[COLS] = {A0,A1,A2,A3};
+Keypad keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);
+
+String correctPIN = "1234";
+String authorizedUID = "A3 F2 91 08";
+
+void unlock() {
+  lcd.clear(); lcd.print("ACCESS GRANTED");
+  doorServo.write(90);
+  delay(3000);
+  doorServo.write(0);
+}
+
+void deny() {
+  lcd.clear(); lcd.print("ACCESS DENIED");
+  delay(2000);
+}
+
+void setup() {
+  SPI.begin();
+  mfrc522.PCD_Init();
+  lcd.init(); lcd.backlight();
+  doorServo.attach(SERVO_PIN);
+  doorServo.write(0);
+  lcd.print("Scan Card or");
+  lcd.setCursor(0,1);
+  lcd.print("Enter PIN:");
+}
+
+void loop() {
+  if (mfrc522.PICC_IsNewCardPresent() && mfrc522.PICC_ReadCardSerial()) {
+    String uid = "";
+    for (byte i = 0; i < mfrc522.uid.size; i++) {
+      uid += String(mfrc522.uid.uidByte[i], HEX);
+      if (i < mfrc522.uid.size - 1) uid += " ";
+    }
+    uid.toUpperCase();
+    uid == authorizedUID ? unlock() : deny();
+    mfrc522.PICC_HaltA();
+  }
+}`,
+    lang:'arduino',
+    date:'2024-12-20',
+    apkSize:null,
+    version:null
+  },
+  {
+    id:4, title:'IoT Weather Station Dashboard', category:'arduino', badge:'arduino',
+    icon:'🌤️', difficulty:'Beginner', downloads:2100, views:11200,
+    desc:'Build a full IoT weather station with ESP32. View live data on a web dashboard from anywhere in the world.',
+    overview:'An ESP32-based weather station that reads temperature, humidity, pressure, and UV index. Data is pushed to Firebase and displayed on a beautiful web dashboard with historical charts.',
+    features:['4-in-1 sensor (Temp/Humidity/Pressure/UV)','Real-time web dashboard','7-day history charts','Email alerts for extreme readings','Low power deep sleep mode','OTA firmware updates'],
+    components:['ESP32 Dev Board','BME280 Sensor','UV Index Sensor ML8511','3.7V LiPo Battery','Solar Panel (optional)','Weatherproof Enclosure'],
+    code:`#include <WiFi.h>
+#include <Adafruit_BME280.h>
+#include <Firebase_ESP_Client.h>
+
+Adafruit_BME280 bme;
+FirebaseData fbdo;
+FirebaseAuth auth;
+FirebaseConfig config;
+
+const char* WIFI_SSID = "YOUR_SSID";
+const char* WIFI_PASS = "YOUR_PASS";
+
+#define uS_TO_S_FACTOR 1000000
+#define TIME_TO_SLEEP 300
+
+void setup() {
+  Serial.begin(115200);
+  bme.begin(0x76);
+  WiFi.begin(WIFI_SSID, WIFI_PASS);
+  
+  while (WiFi.status() != WL_CONNECTED) delay(500);
+  
+  config.database_url = "YOUR_FIREBASE_URL";
+  Firebase.begin(&config, &auth);
+  
+  float temp = bme.readTemperature();
+  float hum  = bme.readHumidity();
+  float pres = bme.readPressure() / 100.0F;
+  
+  if (Firebase.ready()) {
+    FirebaseJson json;
+    json.set("temperature", temp);
+    json.set("humidity", hum);
+    json.set("pressure", pres);
+    json.set("timestamp", millis());
+    Firebase.RTDB.setJSON(&fbdo, "/weather/latest", &json);
+  }
+  
+  esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR);
+  esp_deep_sleep_start();
+}
+
+void loop() {}`,
+    lang:'arduino',
+    date:'2024-12-05',
+    apkSize:null,
+    version:null
+  },
+  {
+    id:5, title:'Inventory Tracker App', category:'flutter', badge:'flutter',
+    icon:'📋', difficulty:'Beginner', downloads:560, views:3400,
+    desc:'A Flutter app to track components and parts in your maker lab. Scan barcodes, set low-stock alerts.',
+    overview:'A practical inventory management Flutter app designed for makers and electronics enthusiasts. Track resistors, capacitors, modules, and more with barcode scanning and Firebase sync.',
+    features:['Barcode scanner integration','Firebase cloud sync','Low-stock notifications','Category-based organization','CSV export','Search & filter'],
+    components:['Android/iOS device','Flutter SDK','Firebase account'],
+    code:`class InventoryItem {
+  final String id;
+  final String name;
+  final String category;
+  final int quantity;
+  final int minStock;
+  
+  InventoryItem({
+    required this.id,
+    required this.name,
+    required this.category,
+    required this.quantity,
+    required this.minStock,
+  });
+
+  bool get isLowStock => quantity <= minStock;
+  
+  Map<String, dynamic> toMap() => {
+    'name': name,
+    'category': category,
+    'quantity': quantity,
+    'minStock': minStock,
+  };
+
+  factory InventoryItem.fromFirestore(DocumentSnapshot doc) {
+    Map data = doc.data() as Map;
+    return InventoryItem(
+      id: doc.id,
+      name: data['name'],
+      category: data['category'],
+      quantity: data['quantity'],
+      minStock: data['minStock'] ?? 5,
+    );
+  }
+}`,
+    lang:'dart',
+    date:'2024-11-18',
+    apkSize:'8.1 MB',
+    version:'v1.1.0'
+  },
+  {
+    id:6, title:'Line Following Robot', category:'arduino', badge:'arduino',
+    icon:'🤖', difficulty:'Beginner', downloads:1560, views:9800,
+    desc:'Build a classic line-following robot using IR sensors, an L298N motor driver, and an Arduino Uno.',
+    overview:'The quintessential beginner Arduino robotics project. This line follower uses 3 IR sensors and a PID controller for smooth, accurate tracking on any surface.',
+    features:['3-sensor IR array for accuracy','PID control algorithm','Speed control via PWM','Adjustable sensitivity','Battery powered (7.4V LiPo)','Compact chassis design'],
+    components:['Arduino Uno','L298N Motor Driver','IR Sensor Module x3','TT DC Motors x2','Robot Chassis Kit','7.4V LiPo Battery','Wheels x2 + Caster Wheel'],
+    code:`#define LEFT_MOTOR_IN1 2
+#define LEFT_MOTOR_IN2 3
+#define LEFT_MOTOR_ENA 5
+#define RIGHT_MOTOR_IN3 6
+#define RIGHT_MOTOR_IN4 7
+#define RIGHT_MOTOR_ENB 9
+#define IR_LEFT A0
+#define IR_MID  A1
+#define IR_RIGHT A2
+
+int baseSpeed = 180;
+
+void setup() {
+  pinMode(LEFT_MOTOR_IN1, OUTPUT);
+  pinMode(LEFT_MOTOR_IN2, OUTPUT);
+  pinMode(RIGHT_MOTOR_IN3, OUTPUT);
+  pinMode(RIGHT_MOTOR_IN4, OUTPUT);
+  Serial.begin(9600);
+}
+
+void moveForward(int lSpeed, int rSpeed) {
+  digitalWrite(LEFT_MOTOR_IN1, HIGH);
+  digitalWrite(LEFT_MOTOR_IN2, LOW);
+  analogWrite(LEFT_MOTOR_ENA, lSpeed);
+  digitalWrite(RIGHT_MOTOR_IN3, HIGH);
+  digitalWrite(RIGHT_MOTOR_IN4, LOW);
+  analogWrite(RIGHT_MOTOR_ENB, rSpeed);
+}
+
+void loop() {
+  int l = digitalRead(IR_LEFT);
+  int m = digitalRead(IR_MID);
+  int r = digitalRead(IR_RIGHT);
+  
+  if (m == LOW && l == HIGH && r == HIGH) {
+    moveForward(baseSpeed, baseSpeed);
+  } else if (l == LOW && m == HIGH) {
+    moveForward(80, baseSpeed);
+  } else if (r == LOW && m == HIGH) {
+    moveForward(baseSpeed, 80);
+  }
+  delay(10);
+}`,
+    lang:'arduino',
+    date:'2024-11-01',
+    apkSize:null,
+    version:null
+  }
+];
+
+const APKS = [
+  {id:1, name:'ArduinoControl Pro', icon:'🎮', version:'v2.1.0', size:'4.2 MB', downloads:3240, desc:'Control any Arduino project over Bluetooth or Wi-Fi.'},
+  {id:2, name:'FlutterSensor Dashboard', icon:'📊', version:'v1.5.2', size:'12.8 MB', downloads:1890, desc:'Real-time sensor data visualization with charts.'},
+  {id:3, name:'IoT Remote Manager', icon:'🌐', version:'v3.0.0', size:'8.4 MB', downloads:1420, desc:'Manage all your IoT devices from one app.'},
+  {id:4, name:'Inventory Tracker', icon:'📋', version:'v1.1.0', size:'8.1 MB', downloads:560, desc:'Track electronic components with barcode scan.'},
+  {id:5, name:'BLE Terminal Pro', icon:'📡', version:'v1.3.0', size:'3.6 MB', downloads:2100, desc:'Send AT commands and serial data over BLE.'},
+  {id:6, name:'PWM LED Controller', icon:'💡', version:'v1.0.4', size:'2.1 MB', downloads:980, desc:'Control RGB LEDs and strips from your phone.'},
+];
+
+const TUTORIALS = [
+  {id:1, topic:'Arduino', level:'Beginner', title:'Getting Started with Arduino: Your First Sketch', desc:'Set up the Arduino IDE, understand the basic sketch structure, and blink your first LED in under 20 minutes.',tags:['Arduino','IDE','LED']},
+  {id:2, topic:'Flutter', level:'Beginner', title:'Build Your First Flutter App in 1 Hour', desc:'Install Flutter, understand widgets, and build a fully functional counter app from scratch.',tags:['Flutter','Dart','Widgets']},
+  {id:3, topic:'Electronics', level:'Beginner', title:'Understanding Resistors, Capacitors & Diodes', desc:'A visual guide to basic electronic components — what they do, how to read color codes, and when to use them.',tags:['Electronics','Components','Basics']},
+  {id:4, topic:'IoT', level:'Intermediate', title:'Connect Arduino to Firebase Realtime Database', desc:'Send sensor data from your Arduino to Firebase and read it back in real time using the REST API.',tags:['IoT','Firebase','ESP8266']},
+  {id:5, topic:'Arduino', level:'Intermediate', title:'PID Control Theory & Arduino Implementation', desc:'Understand proportional-integral-derivative control and implement it for motor speed and robot position control.',tags:['Arduino','PID','Control Systems']},
+  {id:6, topic:'Flutter', level:'Intermediate', title:'Flutter BLE Integration with flutter_blue_plus', desc:'Scan, connect, and communicate with Bluetooth Low Energy devices from a Flutter app.',tags:['Flutter','BLE','Bluetooth']},
+];
+
+const CIRCUITS = [
+  {id:1, title:'ESP32 Weather Station Circuit', cat:'IoT Circuit', icon:'🌤️', components:'ESP32, BME280, 0.96" OLED', difficulty:'Intermediate'},
+  {id:2, title:'L293D Motor Driver Wiring', cat:'Arduino Circuit', icon:'⚙️', components:'Arduino Uno, L293D, DC Motors x2', difficulty:'Beginner'},
+  {id:3, title:'RFID RC522 Interface Circuit', cat:'Sensor Circuit', icon:'🔐', components:'Arduino Nano, RC522, LEDs', difficulty:'Beginner'},
+  {id:4, title:'Li-Ion Battery Management PCB', cat:'Power Circuit', icon:'🔋', components:'TP4056, Protection IC, USB-C', difficulty:'Advanced'},
+  {id:5, title:'WS2812B LED Strip Controller', cat:'Arduino Circuit', icon:'🌈', components:'Arduino Uno, Level Shifter, WS2812B', difficulty:'Intermediate'},
+  {id:6, title:'Ultrasonic HC-SR04 Wiring', cat:'Sensor Circuit', icon:'📡', components:'Arduino, HC-SR04, 1kΩ Resistors', difficulty:'Beginner'},
+];
+
+const COMMENTS = [
+  {author:'MakerMike', avatar:'M', date:'2 days ago', text:'Amazing tutorial! I built this in one evening. The code is clean and well-commented.'},
+  {author:'CircuitQueen', avatar:'C', date:'5 days ago', text:'Could you add support for the DHT11 as well? Some of us have the cheaper version.'},
+  {author:'FlutterFan', avatar:'F', date:'1 week ago', text:'The companion app is superb! Works flawlessly on Android 14.'},
+];
+
+/* ============================================================
+   RENDER FUNCTIONS
+============================================================ */
+function getBadgeHTML(cat) {
+  const map = {arduino:'badge-arduino',flutter:'badge-flutter',apk:'badge-apk',circuit:'badge-circuit',tutorial:'badge-tutorial'};
+  const labels = {arduino:'Arduino',flutter:'Flutter',apk:'APK',circuit:'Circuit',tutorial:'Tutorial'};
+  return `<span class="badge ${map[cat]||'badge-arduino'}">${labels[cat]||cat}</span>`;
+}
+function getDiffBadge(diff) {
+  if(!diff) return '';
+  const d = diff.toLowerCase();
+  return `<span class="badge badge-${d}">${diff}</span>`;
+}
+function formatNum(n) {
+  return n >= 1000 ? (n/1000).toFixed(1)+'k' : n;
+}
+
+function renderProjectCard(p, onclick) {
+  return `<div class="card" onclick="${onclick||`showProject(${p.id})`}" style="cursor:pointer">
+    <div class="card-img-placeholder">${p.icon}</div>
+    <div class="card-body">
+      <div class="card-meta">${getBadgeHTML(p.badge)} ${getDiffBadge(p.difficulty)}</div>
+      <div class="card-title">${p.title}</div>
+      <div class="card-desc">${p.desc}</div>
+    </div>
+    <div class="card-footer">
+      <div class="card-stats">
+        <div class="card-stat">📥 ${formatNum(p.downloads)}</div>
+        <div class="card-stat">👁️ ${formatNum(p.views)}</div>
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="event.stopPropagation();showProject(${p.id})">View →</button>
+    </div>
+  </div>`;
+}
+
+function renderAPKCard(a) {
+  return `<div class="apk-card">
+    <div class="apk-icon">${a.icon}</div>
+    <div class="apk-info">
+      <div class="apk-name">${a.name}</div>
+      <div class="apk-meta">
+        <span>📦 ${a.version}</span>
+        <span>💾 ${a.size}</span>
+        <span class="dl-count">📥 ${formatNum(a.downloads)}</span>
+      </div>
+      <div class="text-sm text-muted">${a.desc}</div>
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="handleDownload('${a.name}')">⬇ Download</button>
+  </div>`;
+}
+
+function renderTutorialCard(t, i) {
+  const topicBadge = {Arduino:'badge-arduino',Flutter:'badge-flutter',Electronics:'badge-circuit',IoT:'badge-apk'};
+  return `<div class="tutorial-card">
+    <div class="tutorial-header">
+      <div class="tutorial-num">// tutorial_${String(i+1).padStart(2,'0')}</div>
+      <div class="tutorial-title">${t.title}</div>
+    </div>
+    <div class="tutorial-body">
+      <div class="tutorial-desc">${t.desc}</div>
+      <div class="tutorial-tags">${t.tags.map(tag=>`<span class="badge ${topicBadge[t.topic]||'badge-tutorial'}">${tag}</span>`).join('')}</div>
+    </div>
+    <div class="tutorial-footer">
+      <span>${getDiffBadge(t.level)}</span>
+      <button class="btn btn-ghost btn-sm">Read More →</button>
+    </div>
+  </div>`;
+}
+
+function renderCircuitCard(c) {
+  return `<div class="circuit-card">
+    <div class="circuit-img">
+      <div class="circuit-lines"></div>
+      <div style="position:relative;z-index:1;font-size:3rem">${c.icon}</div>
+    </div>
+    <div class="card-body">
+      <div class="card-meta"><span class="badge badge-circuit">${c.cat}</span> ${getDiffBadge(c.difficulty)}</div>
+      <div class="card-title">${c.title}</div>
+      <div class="text-sm text-muted mt-2">Components: ${c.components}</div>
+    </div>
+    <div class="card-footer">
+      <button class="btn btn-outline btn-sm" style="color:var(--purple);border-color:var(--purple)" onclick="showToast('📥 Downloading schematic...','success')">⬇ Download</button>
+      <button class="btn btn-ghost btn-sm">View →</button>
+    </div>
+  </div>`;
+}
+
+/* ============================================================
+   POPULATE PAGES
+============================================================ */
+function populateHome() {
+  const latest = PROJECTS.slice(0,3);
+  document.getElementById('latestProjects').innerHTML = latest.map(p=>renderProjectCard(p)).join('');
+  
+  const dlHTML = APKS.slice(0,4).map((a,i)=>`<div class="dl-item">
+    <div class="dl-rank ${i<3?'top':''}">${i+1}</div>
+    <div class="dl-icon">${a.icon}</div>
+    <div style="flex:1"><div class="dl-name">${a.name}</div><div class="dl-count">📥 ${formatNum(a.downloads)} downloads</div></div>
+    <button class="btn btn-secondary btn-sm" onclick="handleDownload('${a.name}')">⬇</button>
+  </div>`).join('');
+  document.getElementById('popularDownloads').innerHTML = dlHTML;
+}
+
+function populateProjects() {
+  document.getElementById('allProjectsGrid').innerHTML = PROJECTS.map(p=>renderProjectCard(p)).join('');
+}
+
+function populateArduino() {
+  const ap = PROJECTS.filter(p=>p.category==='arduino');
+  document.getElementById('arduinoGrid').innerHTML = ap.map(p=>renderProjectCard(p)).join('');
+}
+
+function populateFlutter() {
+  const fp = PROJECTS.filter(p=>p.category==='flutter');
+  document.getElementById('flutterGrid').innerHTML = fp.map(p=>renderProjectCard(p)).join('');
+}
+
+function populateAPK() {
+  document.getElementById('apkList').innerHTML = APKS.map(a=>renderAPKCard(a)).join('');
+}
+
+function populateCircuits() {
+  document.getElementById('circuitsGrid').innerHTML = CIRCUITS.map(c=>renderCircuitCard(c)).join('');
+}
+
+function populateTutorials() {
+  document.getElementById('tutorialsGrid').innerHTML = TUTORIALS.map((t,i)=>renderTutorialCard(t,i)).join('');
+}
+
+function populateAdmin() {
+  // Recent projects table
+  const tbody = document.getElementById('adminRecentTable');
+  if(tbody) tbody.innerHTML = PROJECTS.slice(0,5).map(p=>`<tr>
+    <td>${p.icon} <strong style="color:var(--text-primary)">${p.title}</strong></td>
+    <td>${getBadgeHTML(p.badge)}</td>
+    <td class="mono">${formatNum(p.downloads)}</td>
+    <td>${p.date}</td>
+    <td style="display:flex;gap:8px">
+      <button class="btn btn-sm btn-secondary" onclick="adminPanel('addProject',null)">✏️</button>
+      <button class="btn btn-sm btn-danger" onclick="showToast('🗑️ Project deleted','error')">🗑️</button>
+    </td>
+  </tr>`).join('');
+  
+  // Manage table
+  const mtbody = document.getElementById('adminManageTable');
+  if(mtbody) mtbody.innerHTML = PROJECTS.map(p=>`<tr>
+    <td>${p.icon} <strong style="color:var(--text-primary)">${p.title}</strong></td>
+    <td>${getBadgeHTML(p.badge)}</td>
+    <td class="mono">${formatNum(p.downloads)}</td>
+    <td><span class="badge badge-tutorial">Published</span></td>
+    <td style="display:flex;gap:8px">
+      <button class="btn btn-sm btn-secondary">✏️ Edit</button>
+      <button class="btn btn-sm btn-danger" onclick="showToast('🗑️ Deleted','error')">🗑️</button>
+    </td>
+  </tr>`).join('');
+  
+  // Comments table
+  const ctbody = document.getElementById('commentsTable');
+  if(ctbody) ctbody.innerHTML = COMMENTS.map(c=>`<tr>
+    <td><strong style="color:var(--text-primary)">${c.author}</strong></td>
+    <td style="max-width:280px">${c.text.slice(0,80)}${c.text.length>80?'...':''}</td>
+    <td>Smart Home Monitor</td>
+    <td class="text-muted">${c.date}</td>
+    <td style="display:flex;gap:8px">
+      <button class="btn btn-sm btn-success" onclick="showToast('✅ Approved','success')">✓</button>
+      <button class="btn btn-sm btn-danger" onclick="showToast('🗑️ Deleted','error')">🗑️</button>
+    </td>
+  </tr>`).join('');
+}
+
+/* ============================================================
+   PAGE NAVIGATION
+============================================================ */
+let currentPage = 'home';
+function showPage(page) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(l=>l.classList.remove('active'));
+  
+  const el = document.getElementById('page-'+page);
+  if(el) {
+    el.classList.add('active');
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+  
+  const navEl = document.querySelector(`.nav-link[onclick*="'${page}'"]`);
+  if(navEl) navEl.classList.add('active');
+  
+  currentPage = page;
+  
+  // Populate on demand
+  if(page==='home') populateHome();
+  if(page==='projects') populateProjects();
+  if(page==='arduino') populateArduino();
+  if(page==='flutter') populateFlutter();
+  if(page==='apk') populateAPK();
+  if(page==='circuits') populateCircuits();
+  if(page==='tutorials') populateTutorials();
+  if(page==='admin') { populateAdmin(); hljs.highlightAll(); }
+}
+
+/* ============================================================
+   SINGLE PROJECT
+============================================================ */
+function showProject(id) {
+  const p = PROJECTS.find(x=>x.id===id);
+  if(!p) return;
+  
+  document.getElementById('proj-cat-breadcrumb').textContent = p.badge.charAt(0).toUpperCase()+p.badge.slice(1);
+  document.getElementById('proj-title-breadcrumb').textContent = p.title;
+  document.getElementById('proj-meta-bar').innerHTML = `${getBadgeHTML(p.badge)} ${getDiffBadge(p.difficulty)} <span class="badge" style="background:var(--bg-card);border:1px solid var(--border);color:var(--text-muted)">📅 ${p.date}</span>`;
+  document.getElementById('proj-title').textContent = p.title;
+  document.getElementById('proj-summary').textContent = p.desc;
+  document.getElementById('proj-featured-img').innerHTML = `<div class="project-featured-placeholder">${p.icon}</div>`;
+  document.getElementById('proj-overview').textContent = p.overview;
+  
+  document.getElementById('proj-features').innerHTML = p.features.map(f=>`<div class="feature-item"><span class="feature-check">✓</span><span>${f}</span></div>`).join('');
+  document.getElementById('proj-components').innerHTML = p.components.map(c=>`<div class="component-item"><div class="component-dot"></div><span>${c}</span></div>`).join('');
+  
+  document.getElementById('proj-code').innerHTML = `<div class="code-block">
+    <div class="code-header">
+      <span class="code-lang">${p.lang === 'dart' ? '// dart' : '// arduino C++'}</span>
+      <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+    </div>
+    <pre><code class="language-${p.lang === 'dart' ? 'dart' : 'cpp'}">${escapeHtml(p.code)}</code></pre>
+  </div>`;
+  
+  const galleryItems = ['🖼️','📷','🔌','⚙️','📡','🎯'];
+  document.getElementById('proj-gallery').innerHTML = galleryItems.map(ic=>`<div class="gallery-img">${ic}</div>`).join('');
+  
+  document.getElementById('proj-sidebar').innerHTML = `
+    <div class="sidebar-card">
+      <h4>Download</h4>
+      ${p.apkSize ? `<button class="sidebar-download-btn" onclick="handleDownload('${p.title}')">⬇ Download APK (${p.apkSize})</button>` : ''}
+      <button class="sidebar-download-btn secondary" onclick="handleDownload('Source Code')">⬇ Source Code (.zip)</button>
+    </div>
+    <div class="sidebar-card">
+      <h4>Project Info</h4>
+      ${p.version ? `<div class="info-row"><span class="info-row-label">Version</span><span class="info-row-val">${p.version}</span></div>` : ''}
+      <div class="info-row"><span class="info-row-label">Downloads</span><span class="info-row-val">${formatNum(p.downloads)}</span></div>
+      <div class="info-row"><span class="info-row-label">Views</span><span class="info-row-val">${formatNum(p.views)}</span></div>
+      <div class="info-row"><span class="info-row-label">Date</span><span class="info-row-val">${p.date}</span></div>
+      <div class="info-row"><span class="info-row-label">Difficulty</span><span class="info-row-val">${p.difficulty}</span></div>
+    </div>
+    <div class="sidebar-card">
+      <h4>Share</h4>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-secondary btn-sm flex:1" style="flex:1" onclick="showToast('🔗 Link copied!','success')">🔗 Copy Link</button>
+        <button class="btn btn-secondary btn-sm" onclick="showToast('🐦 Shared!','success')">🐦</button>
+      </div>
+    </div>`;
+  
+  document.getElementById('proj-comments').innerHTML = COMMENTS.map(c=>`<div class="comment">
+    <div class="comment-avatar">${c.avatar}</div>
+    <div>
+      <span class="comment-author">${c.author}</span>
+      <span class="comment-date">${c.date}</span>
+      <div class="comment-text">${c.text}</div>
+    </div>
+  </div>`).join('');
+  
+  showPage('project');
+  setTimeout(()=>hljs.highlightAll(), 100);
+}
+
+function escapeHtml(text) {
+  return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function copyCode(btn) {
+  const pre = btn.closest('.code-block').querySelector('pre code');
+  navigator.clipboard.writeText(pre.textContent).then(()=>{
+    btn.textContent = 'Copied!';
+    setTimeout(()=>btn.textContent='Copy',2000);
+  });
+}
+
+/* ============================================================
+   FILTER & SORT
+============================================================ */
+function filterProjects(cat, btn) {
+  document.querySelectorAll('.filter-bar .filter-btn').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  const filtered = cat === 'all' ? PROJECTS : PROJECTS.filter(p=>p.category===cat || p.badge===cat);
+  document.getElementById('allProjectsGrid').innerHTML = filtered.map(p=>renderProjectCard(p)).join('');
+}
+
+function sortProjects(val) {
+  let sorted = [...PROJECTS];
+  if(val==='downloads') sorted.sort((a,b)=>b.downloads-a.downloads);
+  else if(val==='popular') sorted.sort((a,b)=>b.views-a.views);
+  else sorted.sort((a,b)=>new Date(b.date)-new Date(a.date));
+  document.getElementById('allProjectsGrid').innerHTML = sorted.map(p=>renderProjectCard(p)).join('');
+}
+
+/* ============================================================
+   ADMIN
+============================================================ */
+function adminPanel(panel, clickedEl) {
+  document.querySelectorAll('.admin-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.admin-nav-item').forEach(i=>i.classList.remove('active'));
+  const el = document.getElementById('panel-'+panel);
+  if(el) el.classList.add('active');
+  if(clickedEl) clickedEl.classList.add('active');
+  else {
+    const navEl = document.querySelector(`.admin-nav-item[onclick*="'${panel}'"]`);
+    if(navEl) navEl.classList.add('active');
+  }
+}
+
+/* ============================================================
+   THEME TOGGLE
+============================================================ */
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  document.querySelector('.theme-toggle').textContent = isDark ? '🌙' : '☀️';
+}
+
+/* ============================================================
+   MOBILE MENU
+============================================================ */
+function toggleMobileMenu() {
+  document.getElementById('mobileMenu').classList.toggle('open');
+}
+
+/* ============================================================
+   DOWNLOADS
+============================================================ */
+const downloadCounts = {};
+function handleDownload(name) {
+  downloadCounts[name] = (downloadCounts[name]||0)+1;
+  showToast(`📦 Downloading ${name}...`, 'success');
+}
+
+/* ============================================================
+   TOAST
+============================================================ */
+function showToast(msg, type='success') {
+  const c = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.innerHTML = msg;
+  c.appendChild(t);
+  setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(20px)';t.style.transition='all 0.3s';setTimeout(()=>t.remove(),300)}, 3000);
+}
+
+/* ============================================================
+   INIT
+============================================================ */
+document.addEventListener('DOMContentLoaded', () => {
+  populateHome();
+  hljs.highlightAll();
+  
+  // Nav scroll effect
+  window.addEventListener('scroll', ()=>{
+    const nav = document.getElementById('nav');
+    nav.style.borderBottomColor = window.scrollY > 20 ? 'var(--border-bright)' : 'var(--border)';
+  });
+});
+</script>
+</body>
+</html>
