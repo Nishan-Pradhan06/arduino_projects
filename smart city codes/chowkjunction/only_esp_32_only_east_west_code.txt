@@ -1,0 +1,524 @@
+/*
+  ESP32 Smart Circular Junction
+  CURRENT VERSION:
+  - East Road + West Road only
+  - Realistic traffic light behavior
+  - Opposite directions GREEN together
+  - Ultrasonic sensors on incoming lanes
+  - Pedestrian buttons for both roads
+
+
+  ROADS:
+  East Incoming  -> GREEN together with West
+  West Incoming  -> GREEN together with East
+
+
+  FUTURE:
+  Add North + South later
+
+
+  -----------------------------------------
+  EAST ROAD PINS
+  -----------------------------------------
+  RED     -> GPIO 13
+  YELLOW  -> GPIO 12
+  GREEN   -> GPIO 14
+
+
+  TRIG    -> GPIO 5
+  ECHO    -> GPIO 18
+
+
+  PED BTN -> GPIO 4
+
+
+  -----------------------------------------
+  WEST ROAD PINS
+  -----------------------------------------
+  RED     -> GPIO 27
+  YELLOW  -> GPIO 26
+  GREEN   -> GPIO 25
+
+
+  TRIG    -> GPIO 33
+  ECHO    -> GPIO 32
+
+
+  PED BTN -> GPIO 15
+
+
+  -----------------------------------------
+  IMPORTANT
+  -----------------------------------------
+  HC-SR04 ECHO is 5V
+  Use voltage divider before ESP32 input
+*/
+
+
+//
+// -------------------- EAST ROAD --------------------
+//
+#define EAST_RED       13
+#define EAST_YELLOW    12
+#define EAST_GREEN     14
+
+
+#define EAST_TRIG      5
+#define EAST_ECHO      18
+
+
+#define EAST_BUTTON    4
+
+
+//
+// -------------------- WEST ROAD --------------------
+//
+#define WEST_RED       26
+#define WEST_YELLOW    25
+#define WEST_GREEN     33
+
+
+#define WEST_TRIG      19
+#define WEST_ECHO      21
+
+
+#define WEST_BUTTON    27
+
+
+//
+// -------------------- TIMING --------------------
+//
+const unsigned long MIN_GREEN_TIME = 5000;
+const unsigned long MAX_GREEN_TIME = 12000;
+
+
+const unsigned long YELLOW_TIME = 2000;
+const unsigned long ALL_RED_TIME = 1000;
+
+
+const unsigned long PEDESTRIAN_TIME = 5000;
+
+
+//
+// -------------------- VARIABLES --------------------
+//
+bool pedestrianRequest = false;
+
+
+//
+// ===================================================
+// SETUP
+// ===================================================
+//
+void setup() {
+
+
+  Serial.begin(115200);
+
+
+  //
+  // EAST LIGHTS
+  //
+  pinMode(EAST_RED, OUTPUT);
+  pinMode(EAST_YELLOW, OUTPUT);
+  pinMode(EAST_GREEN, OUTPUT);
+
+
+  //
+  // WEST LIGHTS
+  //
+  pinMode(WEST_RED, OUTPUT);
+  pinMode(WEST_YELLOW, OUTPUT);
+  pinMode(WEST_GREEN, OUTPUT);
+
+
+  //
+  // EAST SENSOR
+  //
+  pinMode(EAST_TRIG, OUTPUT);
+  pinMode(EAST_ECHO, INPUT);
+
+
+  //
+  // WEST SENSOR
+  //
+  pinMode(WEST_TRIG, OUTPUT);
+  pinMode(WEST_ECHO, INPUT);
+
+
+  //
+  // BUTTONS
+  //
+  pinMode(EAST_BUTTON, INPUT_PULLUP);
+  pinMode(WEST_BUTTON, INPUT_PULLUP);
+
+
+  setAllRed();
+
+
+  Serial.println("Smart Circular Junction Started");
+}
+
+
+//
+// ===================================================
+// MAIN LOOP
+// ===================================================
+//
+void loop() {
+
+
+  checkPedestrianButtons();
+
+
+  //
+  // If pedestrian requested crossing
+  //
+  if (pedestrianRequest) {
+
+
+    runPedestrianPhase();
+
+
+    pedestrianRequest = false;
+  }
+
+
+  //
+  // Read traffic density
+  //
+  float eastDistance = readDistance(EAST_TRIG, EAST_ECHO);
+  float westDistance = readDistance(WEST_TRIG, WEST_ECHO);
+
+
+  Serial.print("East Distance: ");
+  Serial.print(eastDistance);
+  Serial.println(" cm");
+
+
+  Serial.print("West Distance: ");
+  Serial.print(westDistance);
+  Serial.println(" cm");
+
+
+  //
+  // Calculate adaptive green time
+  //
+  unsigned long greenTime =
+      calculateGreenTime(eastDistance, westDistance);
+
+
+  //
+  // Run vehicle phase
+  //
+  runEastWestPhase(greenTime);
+}
+
+
+//
+// ===================================================
+// DISTANCE SENSOR
+// ===================================================
+//
+float readDistance(int trigPin, int echoPin) {
+
+
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+
+
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+
+
+  digitalWrite(trigPin, LOW);
+
+
+  long duration = pulseIn(echoPin, HIGH, 30000);
+
+
+  if (duration == 0) {
+    return 999;
+  }
+
+
+  float distance = duration * 0.0343 / 2.0;
+
+
+  return distance;
+}
+
+
+//
+// ===================================================
+// ADAPTIVE TIMING
+// ===================================================
+//
+unsigned long calculateGreenTime(
+    float eastDist,
+    float westDist) {
+
+
+  //
+  // Heavy traffic if vehicles close
+  //
+  if (eastDist < 15 || westDist < 15) {
+
+
+    Serial.println("Heavy traffic detected");
+
+
+    return MAX_GREEN_TIME;
+  }
+
+
+  //
+  // Medium traffic
+  //
+  if (eastDist < 40 || westDist < 40) {
+
+
+    Serial.println("Medium traffic");
+
+
+    return 8000;
+  }
+
+
+  //
+  // Light traffic
+  //
+  Serial.println("Light traffic");
+
+
+  return MIN_GREEN_TIME;
+}
+
+
+//
+// ===================================================
+// BUTTON CHECK
+// ===================================================
+//
+void checkPedestrianButtons() {
+
+
+  static int lastEastState = HIGH;
+  static int lastWestState = HIGH;
+
+
+  int eastState = digitalRead(EAST_BUTTON);
+  int westState = digitalRead(WEST_BUTTON);
+
+
+  //
+  // EAST BUTTON
+  //
+  if (lastEastState == HIGH &&
+      eastState == LOW) {
+
+
+    pedestrianRequest = true;
+
+
+    Serial.println("East pedestrian request");
+
+
+    delay(50);
+  }
+
+
+  //
+  // WEST BUTTON
+  //
+  if (lastWestState == HIGH &&
+      westState == LOW) {
+
+
+    pedestrianRequest = true;
+
+
+    Serial.println("West pedestrian request");
+
+
+    delay(50);
+  }
+
+
+  lastEastState = eastState;
+  lastWestState = westState;
+}
+
+
+//
+// ===================================================
+// LIGHT CONTROL
+// ===================================================
+//
+void setAllRed() {
+
+
+  //
+  // EAST
+  //
+  digitalWrite(EAST_RED, HIGH);
+  digitalWrite(EAST_YELLOW, LOW);
+  digitalWrite(EAST_GREEN, LOW);
+
+
+  //
+  // WEST
+  //
+  digitalWrite(WEST_RED, HIGH);
+  digitalWrite(WEST_YELLOW, LOW);
+  digitalWrite(WEST_GREEN, LOW);
+}
+
+
+//
+// EAST + WEST GREEN
+//
+void setEastWestGreen() {
+
+
+  //
+  // EAST
+  //
+  digitalWrite(EAST_RED, LOW);
+  digitalWrite(EAST_YELLOW, LOW);
+  digitalWrite(EAST_GREEN, HIGH);
+
+
+  //
+  // WEST
+  //
+  digitalWrite(WEST_RED, LOW);
+  digitalWrite(WEST_YELLOW, LOW);
+  digitalWrite(WEST_GREEN, HIGH);
+}
+
+
+//
+// EAST + WEST YELLOW
+//
+void setEastWestYellow() {
+
+
+  //
+  // EAST
+  //
+  digitalWrite(EAST_RED, LOW);
+  digitalWrite(EAST_YELLOW, HIGH);
+  digitalWrite(EAST_GREEN, LOW);
+
+
+  //
+  // WEST
+  //
+  digitalWrite(WEST_RED, LOW);
+  digitalWrite(WEST_YELLOW, HIGH);
+  digitalWrite(WEST_GREEN, LOW);
+}
+
+
+//
+// ===================================================
+// VEHICLE PHASE
+// ===================================================
+//
+void runEastWestPhase(unsigned long greenTime) {
+
+
+  Serial.println("EAST + WEST GREEN");
+
+
+  setEastWestGreen();
+
+
+  unsigned long startTime = millis();
+
+
+  while (millis() - startTime < greenTime) {
+
+
+    checkPedestrianButtons();
+
+
+    //
+    // Allow pedestrian interruption
+    //
+    if (pedestrianRequest) {
+      break;
+    }
+
+
+    delay(50);
+  }
+
+
+  //
+  // YELLOW TRANSITION
+  //
+  Serial.println("EAST + WEST YELLOW");
+
+
+  setEastWestYellow();
+
+
+  delay(YELLOW_TIME);
+
+
+  //
+  // ALL RED SAFETY
+  //
+  Serial.println("ALL RED");
+
+
+  setAllRed();
+
+
+  delay(ALL_RED_TIME);
+}
+
+
+//
+// ===================================================
+// PEDESTRIAN PHASE
+// ===================================================
+//
+void runPedestrianPhase() {
+
+
+  Serial.println("PEDESTRIAN PHASE");
+
+
+  //
+  // Stop all incoming traffic
+  //
+  setAllRed();
+
+
+  delay(ALL_RED_TIME);
+
+
+  //
+  // Crossing time
+  //
+  Serial.println("Pedestrians crossing");
+
+
+  delay(PEDESTRIAN_TIME);
+
+
+  //
+  // End crossing
+  //
+  Serial.println("Pedestrian phase ended");
+
+
+  setAllRed();
+
+
+  delay(ALL_RED_TIME);
+}
+

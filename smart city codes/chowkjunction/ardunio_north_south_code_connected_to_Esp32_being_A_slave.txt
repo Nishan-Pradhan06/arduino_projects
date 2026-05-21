@@ -1,0 +1,120 @@
+/*
+ * ============================================================
+ *  SMART 4-WAY INTERSECTION — Arduino UNO SLAVE (FIXED)
+ *  Controls : North + South traffic lights
+ *  Reads    : N/S ultrasonic sensors + 4 pedestrian buttons
+ *  Reports  : "N:xx.x|S:xx.x|PED:0\n" to ESP32 every 500 ms
+ *  Executes : Commands from ESP32 (NS_GREEN / NS_YELLOW / ALL_RED)
+ * ============================================================
+ */
+
+#include <SoftwareSerial.h>
+
+SoftwareSerial espSerial(10, 11);   // RX=10, TX=11
+
+// ─── NORTH PINS ─────────────────────────────────────────────────────
+#define N_RED     2
+#define N_YELLOW  3
+#define N_GREEN   4
+#define N_TRIG    8
+#define N_ECHO    9
+#define N_BTN_L  A2   // North LEFT  pedestrian button
+#define N_BTN_R  A3   // North RIGHT pedestrian button
+
+// ─── SOUTH PINS ─────────────────────────────────────────────────────
+#define S_RED     5
+#define S_YELLOW  6
+#define S_GREEN   7
+#define S_TRIG   A0
+#define S_ECHO   A1
+#define S_BTN_L  12   // South LEFT  pedestrian button
+#define S_BTN_R  13   // South RIGHT pedestrian button
+
+// ─── TIMING (ms) ────────────────────────────────────────────────────
+#define SEND_INTERVAL_MS  500
+
+unsigned long lastSendMs = 0;
+String        cmdBuf     = "";
+
+// ─── SETUP ──────────────────────────────────────────────────────────
+void setup() {
+  espSerial.begin(9600);
+
+  uint8_t outPins[] = { N_RED, N_YELLOW, N_GREEN,
+                        S_RED, S_YELLOW, S_GREEN };
+  for (uint8_t i = 0; i < 6; i++) pinMode(outPins[i], OUTPUT);
+
+  pinMode(N_TRIG, OUTPUT); pinMode(N_ECHO, INPUT);
+  pinMode(S_TRIG, OUTPUT); pinMode(S_ECHO, INPUT);
+
+  uint8_t btnPins[] = { N_BTN_L, N_BTN_R, S_BTN_L, S_BTN_R };
+  for (uint8_t i = 0; i < 4; i++) pinMode(btnPins[i], INPUT_PULLUP);
+
+  setAllRed();
+}
+
+// ─── MAIN LOOP ──────────────────────────────────────────────────────
+void loop() {
+  readESP32();
+
+  if (millis() - lastSendMs >= SEND_INTERVAL_MS) {
+    sendSensorData();
+    lastSendMs = millis();
+  }
+}
+
+// ─── READ ESP32 — NON-BLOCKING ───────────────────────────────────────
+void readESP32() {
+  while (espSerial.available()) {
+    char c = (char)espSerial.read();
+    if (c == '\n') {
+      cmdBuf.trim();
+      if      (cmdBuf == "NS_GREEN")  setGreen();
+      else if (cmdBuf == "NS_YELLOW") setYellow();
+      else                            setAllRed();
+      cmdBuf = "";
+    } else if (c != '\r') {
+      if (cmdBuf.length() < 16) cmdBuf += c;
+    }
+  }
+}
+
+// ─── SEND SENSOR DATA TO ESP32 ──────────────────────────────────────
+void sendSensorData() {
+  float n = readDistance(N_TRIG, N_ECHO);
+  float s = readDistance(S_TRIG, S_ECHO);
+
+  bool ped = (!digitalRead(N_BTN_L) || !digitalRead(N_BTN_R) ||
+              !digitalRead(S_BTN_L) || !digitalRead(S_BTN_R));
+
+  espSerial.print("N:");    espSerial.print(n, 1);
+  espSerial.print("|S:");   espSerial.print(s, 1);
+  espSerial.print("|PED:"); espSerial.println(ped ? 1 : 0);
+}
+
+// ─── ULTRASONIC SENSOR ──────────────────────────────────────────────
+float readDistance(uint8_t trig, uint8_t echo) {
+  digitalWrite(trig, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trig, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trig, LOW);
+  unsigned long d = pulseIn(echo, HIGH, 30000UL);
+  return (d == 0) ? 999.0f : d * 0.01715f;
+}
+
+// ─── LIGHT CONTROL ──────────────────────────────────────────────────
+void setAllRed() {
+  digitalWrite(N_RED, HIGH);  digitalWrite(N_YELLOW, LOW); digitalWrite(N_GREEN, LOW);
+  digitalWrite(S_RED, HIGH);  digitalWrite(S_YELLOW, LOW); digitalWrite(S_GREEN, LOW);
+}
+
+void setGreen() {
+  digitalWrite(N_RED, LOW);  digitalWrite(N_YELLOW, LOW);  digitalWrite(N_GREEN, HIGH);
+  digitalWrite(S_RED, LOW);  digitalWrite(S_YELLOW, LOW);  digitalWrite(S_GREEN, HIGH);
+}
+
+void setYellow() {
+  digitalWrite(N_RED, LOW);  digitalWrite(N_YELLOW, HIGH); digitalWrite(N_GREEN, LOW);
+  digitalWrite(S_RED, LOW);  digitalWrite(S_YELLOW, HIGH); digitalWrite(S_GREEN, LOW);
+}

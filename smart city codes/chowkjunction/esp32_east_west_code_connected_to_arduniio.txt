@@ -1,0 +1,297 @@
+/*
+ * ============================================================
+ *  SMART 4-WAY INTERSECTION — ESP32 MASTER (FIXED)
+ *  Controls : East + West traffic lights
+ *  Receives : N/S sensor distances + pedestrian flags from UNO
+ *  Decides  : Which road pair gets GREEN (EW vs NS)
+ *  Protocol : UNO→ESP32  "N:xx.x|S:xx.x|PED:0\n"
+ *             ESP32→UNO  "NS_GREEN\n" | "NS_YELLOW\n" | "ALL_RED\n"
+ * ============================================================
+ */
+
+#include <Arduino.h>
+
+HardwareSerial nodeSerial(2);   // UART2: RX=GPIO16, TX=GPIO17
+
+// ─── EAST PINS ──────────────────────────────────────────────────────
+#define E_RED     13
+#define E_YELLOW  12
+#define E_GREEN   14
+#define E_TRIG     5
+#define E_ECHO    18
+#define E_BTN_L    4   // East LEFT  pedestrian button
+#define E_BTN_R    2   // East RIGHT pedestrian button
+
+// ─── WEST PINS ──────────────────────────────────────────────────────
+#define W_RED     26
+#define W_YELLOW  25
+#define W_GREEN   33
+#define W_TRIG    19
+#define W_ECHO    21
+#define W_BTN_L   27   // West LEFT  pedestrian button
+#define W_BTN_R   32   // West RIGHT pedestrian button
+
+// ─── TIMING (ms) ────────────────────────────────────────────────────
+#define MIN_GREEN_MS   4000   // Adaptive green minimum
+#define MAX_GREEN_MS  10000   // Adaptive green maximum
+#define YELLOW_MS      2000
+#define ALL_RED_MS     1000   // Safety gap between phases
+#define PED_RED_MS     5000   // All-red pedestrian crossing window
+#define SENSOR_MS       500   // Sensor sampling interval
+
+// ─── STATE MACHINE ──────────────────────────────────────────────────
+enum TrafficState : uint8_t {
+  STATE_ALL_RED,
+  STATE_EW_GREEN,
+  STATE_EW_YELLOW,
+  STATE_NS_GREEN,
+  STATE_NS_YELLOW,
+  STATE_PED_ALL_RED
+};
+
+TrafficState  currentState = STATE_ALL_RED;
+unsigned long stateTimer   = 0;
+unsigned long greenTime    = 6000;
+
+// ─── SENSOR READINGS ────────────────────────────────────────────────
+float eDist = 999.0f, wDist = 999.0f;   // Read locally
+float nDist = 999.0f, sDist = 999.0f;   // Received from UNO
+unsigned long lastSensorMs = 0;
+
+// ─── PEDESTRIAN FLAG ────────────────────────────────────────────────
+volatile bool pedRequest = false;
+
+// ─── UART RECEIVE BUFFER ────────────────────────────────────────────
+String uartBuf = "";
+
+// ─── FORWARD DECLARATIONS ───────────────────────────────────────────
+float readDistance(uint8_t trig, uint8_t echo);
+int   calcScore(float a, float b);
+void  setState(TrafficState s);
+void  checkButtons();
+void  readUNO();
+void  sendUNO(const char* cmd);
+void  setAllRedHW();
+void  setEWGreenHW();
+void  setEWYellowHW();
+
+// ─── SETUP ──────────────────────────────────────────────────────────
+void setup() {
+  Serial.begin(115200);
+  nodeSerial.begin(9600, SERIAL_8N1, 16, 17);
+
+  // Light outputs
+  uint8_t outPins[] = { E_RED, E_YELLOW, E_GREEN,
+                        W_RED, W_YELLOW, W_GREEN };
+  for (uint8_t i = 0; i < 6; i++) pinMode(outPins[i], OUTPUT);
+
+  // Sensor pins
+  pinMode(E_TRIG, OUTPUT); pinMode(E_ECHO, INPUT);
+  pinMode(W_TRIG, OUTPUT); pinMode(W_ECHO, INPUT);
+
+  // Pedestrian buttons — LOW when pressed (internal pull-up)
+  uint8_t btnPins[] = { E_BTN_L, E_BTN_R, W_BTN_L, W_BTN_R };
+  for (uint8_t i = 0; i < 4; i++) pinMode(btnPins[i], INPUT_PULLUP);
+
+  setAllRedHW();
+  sendUNO("ALL_RED");
+  setState(STATE_ALL_RED);
+}
+
+// ─── MAIN LOOP ──────────────────────────────────────────────────────
+void loop() {
+  readUNO();        // Non-blocking UART receive
+  checkButtons();   // East/West pedestrian buttons
+
+  // Sample EW sensors on timed interval — never blocks the loop
+  if (millis() - lastSensorMs >= SENSOR_MS) {
+    eDist = readDistance(E_TRIG, E_ECHO);
+    wDist = readDistance(W_TRIG, W_ECHO);
+    lastSensorMs = millis();
+  }
+
+  unsigned long now = millis();
+
+  // ── Pedestrian override ─────────────────────────────────────────
+  if (pedRequest && currentState != STATE_PED_ALL_RED) {
+    if (currentState == STATE_EW_GREEN) {
+      setEWYellowHW();
+      sendUNO("ALL_RED");
+      setState(STATE_EW_YELLOW);
+      return;
+    }
+    if (currentState == STATE_NS_GREEN) {
+      sendUNO("NS_YELLOW");
+      setState(STATE_NS_YELLOW);
+      return;
+    }
+    if ((currentState == STATE_EW_YELLOW ||
+         currentState == STATE_NS_YELLOW) &&
+        (now - stateTimer >= YELLOW_MS)) {
+      setAllRedHW();
+      sendUNO("ALL_RED");
+      pedRequest = false;
+      setState(STATE_PED_ALL_RED);
+      return;
+    }
+    if (currentState == STATE_ALL_RED) {
+      sendUNO("ALL_RED");
+      pedRequest = false;
+      setState(STATE_PED_ALL_RED);
+      return;
+    }
+  }
+
+  // ── Normal state transitions ─────────────────────────────────────
+  switch (currentState) {
+
+    case STATE_ALL_RED:
+      if (now - stateTimer >= ALL_RED_MS) {
+        int ewScore  = calcScore(eDist, wDist);
+        int nsScore  = calcScore(nDist, sDist);
+        int winScore = max(ewScore, nsScore);
+
+        // Adaptive green: more congestion → longer green window
+        greenTime = (unsigned long)map(winScore, 0, 200,
+                                       MIN_GREEN_MS, MAX_GREEN_MS);
+        greenTime = constrain(greenTime,
+                              (unsigned long)MIN_GREEN_MS,
+                              (unsigned long)MAX_GREEN_MS);
+
+        if (ewScore >= nsScore) {
+          setEWGreenHW();
+          sendUNO("ALL_RED");         // North + South stay RED
+          setState(STATE_EW_GREEN);
+        } else {
+          setAllRedHW();              // East + West stay RED
+          sendUNO("NS_GREEN");
+          setState(STATE_NS_GREEN);
+        }
+      }
+      break;
+
+    case STATE_EW_GREEN:
+      if (now - stateTimer >= greenTime) {
+        setEWYellowHW();
+        sendUNO("ALL_RED");           // NS stays RED during EW yellow
+        setState(STATE_EW_YELLOW);
+      }
+      break;
+
+    case STATE_EW_YELLOW:
+      if (now - stateTimer >= YELLOW_MS) {
+        setAllRedHW();
+        sendUNO("ALL_RED");
+        if (pedRequest) { pedRequest = false; setState(STATE_PED_ALL_RED); }
+        else             { setState(STATE_ALL_RED); }
+      }
+      break;
+
+    case STATE_NS_GREEN:
+      if (now - stateTimer >= greenTime) {
+        sendUNO("NS_YELLOW");
+        setState(STATE_NS_YELLOW);
+      }
+      break;
+
+    case STATE_NS_YELLOW:
+      if (now - stateTimer >= YELLOW_MS) {
+        setAllRedHW();
+        sendUNO("ALL_RED");
+        if (pedRequest) { pedRequest = false; setState(STATE_PED_ALL_RED); }
+        else             { setState(STATE_ALL_RED); }
+      }
+      break;
+
+    case STATE_PED_ALL_RED:
+      if (now - stateTimer >= PED_RED_MS) {
+        setState(STATE_ALL_RED);
+      }
+      break;
+
+    default:
+      setState(STATE_ALL_RED);
+      break;
+  }
+}
+
+// ─── STATE HELPER ───────────────────────────────────────────────────
+void setState(TrafficState s) {
+  currentState = s;
+  stateTimer   = millis();
+}
+
+// ─── PEDESTRIAN BUTTONS ─────────────────────────────────────────────
+void checkButtons() {
+  if (!digitalRead(E_BTN_L) || !digitalRead(E_BTN_R) ||
+      !digitalRead(W_BTN_L) || !digitalRead(W_BTN_R)) {
+    pedRequest = true;
+  }
+}
+
+// ─── UART READ — NON-BLOCKING ────────────────────────────────────────
+void readUNO() {
+  while (nodeSerial.available()) {
+    char c = (char)nodeSerial.read();
+    if (c == '\n') {
+      uartBuf.trim();
+      int nPos  = uartBuf.indexOf("N:");
+      int sPos  = uartBuf.indexOf("S:");
+      int pPos  = uartBuf.indexOf("PED:");
+      int pipe1 = uartBuf.indexOf('|');
+      int pipe2 = uartBuf.indexOf('|', pipe1 + 1);
+
+      if (nPos >= 0 && sPos >= 0 && pipe1 > nPos) {
+        nDist = uartBuf.substring(nPos + 2, pipe1).toFloat();
+        int endS = (pipe2 > sPos) ? pipe2 : (int)uartBuf.length();
+        sDist = uartBuf.substring(sPos + 2, endS).toFloat();
+      }
+      if (pPos >= 0 && uartBuf.substring(pPos + 4).toInt() == 1) {
+        pedRequest = true;
+      }
+      uartBuf = "";
+    } else if (c != '\r') {
+      if (uartBuf.length() < 64) uartBuf += c;
+    }
+  }
+}
+
+// ─── UART SEND ──────────────────────────────────────────────────────
+void sendUNO(const char* cmd) {
+  nodeSerial.println(cmd);
+}
+
+// ─── ULTRASONIC SENSOR ──────────────────────────────────────────────
+float readDistance(uint8_t trig, uint8_t echo) {
+  digitalWrite(trig, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trig, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trig, LOW);
+  unsigned long d = pulseIn(echo, HIGH, 30000UL);
+  return (d == 0) ? 999.0f : d * 0.01715f;
+}
+
+// ─── TRAFFIC SCORE ──────────────────────────────────────────────────
+// Returns 0–200.  Lower distance → more cars → higher score.
+int calcScore(float a, float b) {
+  int sa = constrain((int)(100.0f - a), 0, 100);
+  int sb = constrain((int)(100.0f - b), 0, 100);
+  return sa + sb; 
+}
+
+// ─── LIGHT CONTROL ──────────────────────────────────────────────────
+void setAllRedHW() {
+  digitalWrite(E_RED, HIGH);  digitalWrite(E_YELLOW, LOW); digitalWrite(E_GREEN, LOW);
+  digitalWrite(W_RED, HIGH);  digitalWrite(W_YELLOW, LOW); digitalWrite(W_GREEN, LOW);
+}
+
+void setEWGreenHW() {
+  digitalWrite(E_RED, LOW);  digitalWrite(E_YELLOW, LOW);  digitalWrite(E_GREEN, HIGH);
+  digitalWrite(W_RED, LOW);  digitalWrite(W_YELLOW, LOW);  digitalWrite(W_GREEN, HIGH);
+}
+
+void setEWYellowHW() {
+  digitalWrite(E_RED, LOW);  digitalWrite(E_YELLOW, HIGH); digitalWrite(E_GREEN, LOW);
+  digitalWrite(W_RED, LOW);  digitalWrite(W_YELLOW, HIGH); digitalWrite(W_GREEN, LOW);
+}
